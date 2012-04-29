@@ -19,11 +19,20 @@
 
 import os
 import sys
+import subprocess
 import shutil
 
 
 def full(*path):
+  '''
+  return full abs path
+  '''
   return os.path.abspath(os.path.join(os.getcwd(), *path))
+
+
+def system(cmd):
+  print cmd
+  subprocess.check_call(cmd, shell=1)
 
 # TODO fix this
 
@@ -36,7 +45,9 @@ NAME = 'Arduino'
 BIN = full(ARDUINO, 'hardware\\tools\\avr\\bin')
 INCLUDE = [
   full(ARDUINO, 'hardware\\arduino\\cores\\arduino'),
-  full(ARDUINO, 'hardware\\arduino\\variants\\standard')
+  full(ARDUINO, 'hardware\\arduino\\variants\\standard'),
+  full(ARDUINO, 'libraries\\SD'),
+  full(ARDUINO, 'libraries\\SD\\utility'),
 ]
 
 INCLUDE_FLAGS = ' '.join('-I%s' % i for i in INCLUDE)
@@ -58,52 +69,50 @@ if os.path.exists('Build'):
 os.mkdir("Build")
 os.mkdir("Build\\Environment")
 
-# first make all the shit
+# Compile all .c and .ccp files in INCLUDE to Environment
+print '\nCompiling INCLUDE\n'
 CORE = full('Build', 'core.a')
 for dirpath in INCLUDE:
   for lname in os.listdir(dirpath):
     name = full(dirpath, lname)
-    if not (name.endswith('.c') or name.endswith('.cpp')): continue
-    if name.endswith('.c'):   cc = GCC
-    if name.endswith('.cpp'): cc = GPP
+    if   name.endswith('.c'):   cc = GCC
+    elif name.endswith('.cpp'): cc = GPP
+    else: continue
     obj = full('Build', 'Environment', '%s.o' % lname)
     cmd = "%s %s -o %s" % (cc, name, obj)
 
-    print cmd
-    os.system(cmd)
+    system(cmd)
 
 
     cmd = '%s %s %s' % (AR, CORE, obj)
-    print cmd
-    os.system(cmd)
+    system(cmd)
 
 
 print
 print
 
-# now make our shit
+# Compile all .c and .ccp files in NAME to Build
+print '\nCompiling %s\n' % NAME
 objs = []
 for dirpath, dirnames, filenames in os.walk(NAME):
   for lname in filenames:
     name = full(dirpath, lname)
-    print name
-    if not (name.endswith('.c') or name.endswith('.cpp')): continue
-    if name.endswith('.c'):   cc = GCC
-    if name.endswith('.cpp'): cc = GPP
+    if   name.endswith('.c'):   cc = GCC
+    elif name.endswith('.cpp'): cc = GPP
+    else: continue
     # assumes no lname conflicts
     obj = full('Build', '%s.o' % lname)
     objs.append(obj)
     cmd = "%s %s -o %s" % (cc, name, obj)
 
-    print cmd
-    os.system(cmd)
-
+    system(cmd)
 
 
 print
 print
 # do some more stuff
 
+# Example commands we will be running:
 # avr-gcc -Os -Wl,--gc-sections -mmcu=atmega328p -o tmp\Blink.cpp.elf tmp\Blink.cpp.o tmp\core.a -Ltmp -lm
 # avr-objcopy -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0 tmp\Blink.cpp.elf tmp\Blink.cpp.eep
 # avr-objcopy -O ihex -R .eeprom tmp\Blink.cpp.elf tmp\Blink.cpp.hex
@@ -116,32 +125,28 @@ HEX = full('Build', '%s.hex' % NAME)
 cmd = '%s -Os -Wl,--gc-sections -mmcu=atmega328p -o %s %s %s -Ltmp -lm' % (
   full(BIN, 'avr-gcc.exe'), ELF, ' '.join(objs), CORE)
 
-print cmd
-os.system(cmd)
+system(cmd)
 
 
 cmd = ('%s -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load '
   '--no-change-warnings --change-section-lma .eeprom=0 %s %s' % (
   full(BIN, 'avr-objcopy.exe'), ELF, EEP))
 
-print cmd
-os.system(cmd)
+system(cmd)
 
 
 cmd = '%s -O ihex -R .eeprom %s %s' % (
   full(BIN, 'avr-objcopy.exe'), ELF, HEX)
 
-print cmd
-os.system(cmd)
+system(cmd)
 
 
-cmd = '%s -C%s -v -v -v -v -patmega328p -carduino -P\\.\COM3 -b115200 -D -Uflash:w:%s:i' % (
+cmd = '%s -C%s -v -v -v -patmega328p -carduino -P\\.\COM3 -b115200 -D -Uflash:w:%s:i' % (
   full(BIN, 'avrdude.exe'),
   full(ARDUINO, 'hardware/tools/avr/etc/avrdude.conf'),
   HEX)
 
-print cmd
-os.system(cmd)
+system(cmd)
 
 
 
