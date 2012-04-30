@@ -1,4 +1,5 @@
 
+#include <Arduino.h>
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -8,21 +9,13 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#include <SD.h>
-#include <mcp2515.h>
+#include "mcp2515/mcp2515.h"
 
-#define PRINT_TO_FILE 1
-
-#if PRINT_TO_FILE
-#define	PRINT(str, ...) {sprintf(buf, str, ##__VA_ARGS__); logFile.write(buf); logFile.flush();}
-#else
 #define	PRINT(str, ...) {sprintf(buf, str, ##__VA_ARGS__); Serial.write(buf);}
-#endif
+
 // ----------------------------------------------------------------------------
-File logFile;
 tCAN message;
 char buf[255];
-uint8_t loopCount, statusLED;
 // ----------------------------------------------------------------------------
 
 void print_can_message(tCAN *message)
@@ -39,8 +32,8 @@ void print_can_message(tCAN *message)
 		for (i = 0; i < length-1; i++) {
 			PRINT("0x%02x ", message->data[i]);
 		}
-                PRINT("0x%02x]",
-                message->data[length-1]);
+		PRINT("0x%02x]",
+				message->data[length-1]);
 	}
 }
 
@@ -88,16 +81,10 @@ void loopback_test(void)
 
 void setup(void)
 {
-        pinMode(3, OUTPUT);
-        digitalWrite(3, HIGH);
-        
-#if PRINT_TO_FILE
-	SD.begin(9);
-//SD_CS pin
-	logFile = SD.open("log.txt", FILE_WRITE);
-#else
+	pinMode(3, OUTPUT);
+	digitalWrite(3, HIGH);
+
 	Serial.begin(9600);
-#endif
 
 	PRINT("----------------------------------------------------\n");
 
@@ -111,16 +98,15 @@ void setup(void)
 	else {
 		PRINT("MCP2515 initialized\n");
 	}
-        
+
 	PRINT("Waiting to receieve messages\n");
 }
 
 void loop(void)
 {
-	logFile = SD.open("log.txt", FILE_WRITE);
 	if (mcp2515_check_message()) {
 		if (mcp2515_get_message(&message)) {
-                        digitalWrite(3, HIGH);
+			digitalWrite(3, HIGH);
 			print_can_message(&message);
 			PRINT("\n");
 		}
@@ -129,7 +115,5 @@ void loop(void)
 		}
 
 	}
-        digitalWrite(3, LOW);
-        logFile.close();
+	digitalWrite(3, LOW);
 }
-
