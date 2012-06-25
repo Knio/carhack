@@ -49,23 +49,22 @@ Cable:
 ###    \---------------/        ###
 ###                             ###
 ###                             ###
-###  Looking at harness         ###
-###                             ###
+###  Looking at back of harness ###
+###  ---                        ###
 ###                             ###
 ###           __                ###
 ###       ___/  |               ###
 ###      /      |               ###
+###    - | -  6 | 8             ###
+###   15 | 7  2 | 7             ###
+###   14 | 1  3 | 6             ###
+###    - | -  5 | 5             ###
+###    - | -  4 | 4             ###
 ###    - | -  - | -             ###
-###   15 | 9  8 | 7             ###
+###   10 | 9  8 | 2             ###
 ###    - | -  - | -             ###
-###    - | -  4 | 5             ###
-###    - | -  5 | 4             ###
-###   11 | 1  3 | 3             ###
-###   10 | 7  2 | 2             ###
-###    - | -  6 | 1             ###
 ###      \___   |               ###
 ###          \__|               ###
-###                             ###
 ###                             ###
 ###                             ###
 ###                             ###
@@ -80,7 +79,7 @@ Cable:
 ###  \  6 7 8 9  /              ###
 ###   \---------/               ###
 ###                             ###
-###  Looking at harness         ###
+###  Looking at canusb          ###
 ###  ---                        ###
 ###                             ###
 ###           ______            ###
@@ -106,14 +105,14 @@ CANUSB pinout
 
          ______
         /      |
-       /     o | +12v
+       /     o | 12V_2
  GND_1 | o     |
        |     o | CAN_L
  CAN_H | o     |
        |     o | GND_2
      - | o     |
        |     o | -
-  +12V | o     |
+ 12V_1 | o     |
        \     o | -
         \______|
 
@@ -122,14 +121,27 @@ CANUSB pinout
 Summary
 =======
 
-CANUSB CAN_H -> 1 -> 7 ???? CAR
-CANUSB CAN_L -> 2 -> 5 GND? CAR
-CANUSB GND_1 -> 9 -> ---
-CANUSB GND_2 -> 4 -> ---
+CANUSB CAN_H -> 8 -> 2 -> ---
+CANUSB CAN_L -> 4 -> 4 -> ??? CAR
+
+CANUSB GND_1 -> 9 -> 10-> ---
+CANUSB GND_2 -> 3 -> 6 -> CAN CAR
+
+CANUSB 12V_1 -> 6 -> 8 -> ??? CAR
+CANUSB 12V_2 -> 5 -> 5 -> GND CAR
 
 
-CAR CAN 14 -> --
-CAR CAN  6 -> --
+Or, if the CANUSB is looking at the connector:
+
+CANUSB CAN_H -> 7 -> 15-> --- CAR
+CANUSB CAN_L -> 2 -> 7 -> ??? CAR
+
+CANUSB GND_1 -> 6 -> 8 -> ??? CAR
+CANUSB GND_2 -> 3 -> 6 -> CAN CAR
+
+CANUSB 12V_1 -> 9 -> 10-> ---
+CANUSB 12V_2 -> 1 -> 14-> CAN CAR
+
 
 Epic fail.
 
