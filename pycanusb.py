@@ -99,7 +99,7 @@ class CANMsg(Structure):
             rtr = '|RTR'
         else:
             rtr = ''
-        return "ID: %d%s%s, Length: %d, Data: %s, Timestamp: %d" % (self.id, ext, rtr, self.len, self.dataAsHexStr(), self.timestamp)
+        return "ID: %4d%s%s, Length: %d, Data: %s, Timestamp: %d" % (self.id, ext, rtr, self.len, self.dataAsHexStr(), self.timestamp)
 
     def dataAsHexStr(self, length=8, prefix='0x'):
         s = prefix
@@ -107,7 +107,7 @@ class CANMsg(Structure):
             if i < self.len:
                 s = s + '%0.2x' % self.data[i]
             else:
-                s = s + '00'
+                s = s + '  '
         return s
 
     def copy(self):
@@ -499,32 +499,39 @@ class CanUSB(object):
             return True
         return False
 
-if __name__ == "__main__":
+
+def main():
     import time
     msg1 = CANMsg()
-    msg2 = CANMsg()
     msg1.id = 0x7DF
     msg1.len = 2
     msg1.data[0] = 0x01
     msg1.data[1] = 0x0C
 
-
+    frames = []
+    num_received = [0]
     def callback(msg):
+        num_received[0] += 1
         rmsg = msg.contents
-        print("callback called")
-        print(rmsg.id)
-        print(rmsg.data[0])
+        # print("frame received:")
+        frames.append((time.time(), rmsg))
+        print(rmsg)
+        # print(rmsg.data[0])
 
     adapters = getAdapters()
+    if not adapters:
+        print('No adapters found')
+        return
+
     for a in adapters:
         for b in [
             # "10",
-            "20",
-            "50",
-            "100",
-            "250",
+            # "20",
+            # "50",
+            # "100",
+            # "250",
             "500",
-            "800",
+            # "800",
             "1000"
             ]:
 
@@ -540,36 +547,59 @@ if __name__ == "__main__":
                 print('Error opening: %s' % adapter.statusText(s))
                 continue
 
+            num_received[0] = 0
             cb = declareCallback(callback)
             adapter.setReceiveCallback(cb)
 
-            can_write = True
-            for i in xrange(16):
-                adapter.write(msg1)
+            # can_write = True
+            # for i in xrange(16):
+            #     adapter.write(msg1)
+            #     s = adapter.status()
+            #     if s != 0:
+            #         print('Error writing: %s' % adapter.statusText(s))
+            #         can_write = False
+            #         break
+
+            # if not can_write:
+            #     continue
+
+            now = time.time()
+            while time.time() < now + 10:
+                time.sleep(2)
                 s = adapter.status()
+                print 'read:', num_received
                 if s != 0:
-                    print('Error writing: %s' % adapter.statusText(s))
-                    can_write = False
+                    print('Error waiting: %s' % adapter.statusText(s))
                     break
-
-            if not can_write:
-                continue
-
-
-            time.sleep(2)
-
-            s = adapter.status()
-            if s != 0:
-                print('Error waiting: %s' % adapter.statusText(s))
-                continue
-
-            # we made it this far, let's assume its connected...
+            if num_received[0]:
+                break
+        else:
             break
+        print 'Trying next adapter'
+    else:
+        print('Opened it?')
+        next_write = 0
+        fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
+        import cPickle
+        try:
+            while 1:
+                time.sleep(2)
+                s = adapter.status()
+                print 'Status:', adapter.statusText(s)
+                if s != 0:
+                    pass
+                # adapter.write(msg1)
+                if len(frames) > next_write:
+                    print('Writing log %s' % fname)
+                    cPickle.dump(frames, open(fname, 'w'), -1)
+                    next_write += 1000
+        except:
+            print('Writing log %s' % fname)
+            cPickle.dump(frames, open(fname, 'w'), -1)
+        return
 
-    print('Opened it?')
+    print('Failed to connect to bus')
 
-    while 1:
-        print 'Status:', adapter.statusText(adapter.status())
-        time.sleep(2)
-        adapter.write(msg1)
 
+if __name__ == "__main__":
+    main()
