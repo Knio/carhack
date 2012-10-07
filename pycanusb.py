@@ -520,6 +520,8 @@ class Frame(object):
         return '%s.%03d ID:%X Flags:%X Data: %r' % (
             localtime, int(ss * 1000), self.flags, self.data)
 
+import logging
+
 def connect(name=None, bitrate=None, flags=None, callback=None):
     '''
     Easy connect to first working adapter.
@@ -529,13 +531,12 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
     if callback is None:
         raise NotImplementedError('callback is required')
 
-    if adapter is None:
+    if name is None:
         adapters = getAdapters()
         if not adapters:
             raise Exception('No adapters found')
-
     else:
-        adapters = [adapter]
+        adapters = [name]
 
     if bitrate is None:
         bitrates = [
