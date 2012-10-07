@@ -155,6 +155,8 @@ class CANUsbStatistics(Structure):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
 ##
 # Initiate a search of available CANUSB adapters on a system.
 # \return A list of serial numbers of all attached adapters if there are any,
@@ -500,106 +502,129 @@ class CanUSB(object):
         return False
 
 
-def main():
-    import time
-    msg1 = CANMsg()
-    msg1.id = 0x7DF
-    msg1.len = 2
-    msg1.data[0] = 0x01
-    msg1.data[1] = 0x0C
 
-    frames = []
-    num_received = [0]
-    def callback(msg):
-        num_received[0] += 1
-        rmsg = msg.contents
-        # print("frame received:")
-        frames.append((time.time(), rmsg))
-        print(rmsg)
-        # print(rmsg.data[0])
+import time
 
-    adapters = getAdapters()
-    if not adapters:
-        print('No adapters found')
-        return
+class Frame(object):
+    def __init__(self, canmsg):
+        self.id         = canmsg.id
+        self.timestamp  = canmsg.timestamp
+        self.flags      = canmsg.flags
+        self.len        = canmsg.len
+        self.data       = canmsg.data
+
+    def __repr__(self):
+        localtime = time.strftime('%Y%m%d.%H%M%S',
+            time.localtime(self.normalized_timestamp))
+        ss = self.normalized_timestamp - int(self.normalized_timestamp)
+        return '%s.%03d ID:%X Flags:%X Data: %r' % (
+            localtime, int(ss * 1000), self.flags, self.data)
+
+def connect(name=None, bitrate=None, flags=None, callback=None):
+    '''
+    Easy connect to first working adapter.
+    '''
+    log = logging.getLogger('pycanusb')
+
+    if callback is None:
+        raise NotImplementedError('callback is required')
+
+    if adapter is None:
+        adapters = getAdapters()
+        if not adapters:
+            raise Exception('No adapters found')
+
+    else:
+        adapters = [adapter]
+
+    if bitrate is None:
+        bitrates = [
+            "10",
+            "20",
+            "50",
+            "100",
+            "250",
+            "500",
+            "800",
+            "1000",
+        ]
+    else:
+        bitrates = [bitrate]
+
+    if flags is None:
+        flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP
+
+
+    start = time.time()
+    last_ts = 90000
+    num_frames = [0]
+    def read(msg):
+        num_frames[0] += 1
+        frame = Frame(msg.contents)
+        if flags & FLAG_TIMESTAMP:
+            ms = frame.timestamp / 1000.
+            if frame.timestamp < (last_ts - 10000):
+                start = time.time() - ms
+            last_ts = frame.timestamp
+            frame.normalized_timestamp = start + ms
+        else:
+            frame.normalized_timestamp = time.time()
+
+        try:
+            callback(frame)
+        except:
+            log.error('Error calling callback', exc_info=True)
 
     for a in adapters:
-        for b in [
-            # "10",
-            # "20",
-            # "50",
-            # "100",
-            # "250",
-            "500",
-            # "800",
-            "1000"
-            ]:
-
-            print("Trying to open adapter %s @ %skbps.." %
-                (a, b))
-
-            adapter = CanUSB(
-                id=a, bitrate=b,
-                flags=FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP)
+        for b in bitrates:
+            log.info('Trying to open adapter %s @ %skbps' % (a, b))
+            adapter = CanUSB(id=a, bitrate=b, flags=flags)
 
             s = adapter.status()
             if s != 0:
-                print('Error opening: %s' % adapter.statusText(s))
+                log.info('Error opening adapter: %s' % adapter.statusText(s))
                 continue
 
-            num_received[0] = 0
-            cb = declareCallback(callback)
-            adapter.setReceiveCallback(cb)
+            if callback:
+                adapter.setReceiveCallback(declareCallback(read))
 
-            # can_write = True
-            # for i in xrange(16):
-            #     adapter.write(msg1)
-            #     s = adapter.status()
-            #     if s != 0:
-            #         print('Error writing: %s' % adapter.statusText(s))
-            #         can_write = False
-            #         break
-
-            # if not can_write:
-            #     continue
-
+            num_frames[0] = 0
             now = time.time()
+            # see if we read anything, 10s timeout
             while time.time() < now + 10:
-                time.sleep(2)
-                s = adapter.status()
-                print 'read:', num_received
-                if s != 0:
-                    print('Error waiting: %s' % adapter.statusText(s))
-                    break
-            if num_received[0]:
-                break
-        else:
-            break
-        print 'Trying next adapter'
-    else:
-        print('Opened it?')
-        next_write = 0
-        fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
-        import cPickle
-        try:
-            while 1:
-                time.sleep(2)
-                s = adapter.status()
-                print 'Status:', adapter.statusText(s)
-                if s != 0:
-                    pass
-                # adapter.write(msg1)
-                if len(frames) > next_write:
-                    print('Writing log %s' % fname)
-                    cPickle.dump(frames, open(fname, 'w'), -1)
-                    next_write += 1000
-        except:
-            print('Writing log %s' % fname)
-            cPickle.dump(frames, open(fname, 'w'), -1)
-        return
+                if num_frames:
+                    log.info('Connected!')
+                    return a
 
-    print('Failed to connect to bus')
+                time.sleep(1)
+                s = adapter.status()
+                if s != 0:
+                    log.info('Error opening adapter: %s' % adapter.statusText(s))
+                    continue
 
+    raise Exception('No working adapters found')
+
+
+import cPickle as pickle
+def main():
+
+    frames = []
+    def read(frame):
+        print frame
+        frames.append(frame)
+
+    adapter = connect(bitrate='500', callback=read)
+
+    fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
+    try:
+        while 1:
+            time.sleep(2)
+            s = adapter.status()
+            print 'Status:', adapter.statusText(s)
+
+    except:
+        print('Writing log %s' % fname)
+        cPickle.dump(frames, open(fname, 'wb'), -1)
 
 if __name__ == "__main__":
     main()
