@@ -31,3 +31,30 @@ http://www.lfd.uci.edu/~gohlke/pythonlibs/#pil
     cam = Device();
     cam.saveSnapshot('image.jpg')
 
+
+
+Accellerometer
+--------------
+
+http://tech.yostengineering.com/3-space-sensor/product-family/embedded
+
+Solder on a USB plug and use over a virtual COM port
+
+
+GPS
+---
+
+None yet :(
+
+
+Data
+----
+
+https://ting.com/devices/SierraU250
+
+
+
+Music
+-----
+
+USB -> 6ch analog out wired to amp

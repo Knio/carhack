@@ -504,23 +504,8 @@ class CanUSB(object):
 
 
 import time
-
-class Frame(object):
-    def __init__(self, canmsg):
-        self.id         = canmsg.id
-        self.timestamp  = canmsg.timestamp
-        self.flags      = canmsg.flags
-        self.len        = canmsg.len
-        self.data       = [canmsg.data[i] for i in xrange(canmsg.len)]
-
-    def __repr__(self):
-        localtime = time.strftime('%Y%m%d.%H%M%S',
-            time.localtime(self.normalized_timestamp))
-        ss = self.normalized_timestamp - int(self.normalized_timestamp)
-        return '%s.%03d ID:%X Flags:%r Data: %r' % (
-            localtime, int(ss * 1000), self.id, self.flags, self.data)
-
 import logging
+from Frame import Frame
 
 def connect(name=None, bitrate=None, flags=None, callback=None):
     '''
@@ -559,13 +544,8 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
     start = time.time()
     last_ts = [90000]
     num_frames = [0]
-    def read(msg):
-        # print 1
-        if msg is None:
-            return -1
+    def read(frame):
         num_frames[0] += 1
-        frame = Frame(msg)
-        # frame = Frame(msg.contents)
         if flags & FLAG_TIMESTAMP:
             ms = frame.timestamp / 1000.
             if frame.timestamp < (last_ts[0] - 10000):
@@ -582,6 +562,22 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
             return -2
         return 0
 
+    def read_cb(msg):
+        frame = Frame(msg.contents)
+        read(frame)
+
+    def read_block(x):
+        if not x:
+            return None
+        frame = Frame(x)
+        read(frame)
+        return frame
+
+    if callback:
+        __callback = declareCallback(read)
+    else:
+        __callback = None
+
     for a in adapters:
         for b in bitrates:
             log.info('Trying to open adapter %s @ %skbps' % (a, b))
@@ -593,10 +589,10 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
                 continue
 
             if callback:
-                adapter.setReceiveCallback(declareCallback(read))
+                adapter.setReceiveCallback(__callback)
 
             else:
-                read(adapter.read())
+                read_block(adapter.read())
 
             num_frames[0] = 0
             now = time.time()
@@ -604,6 +600,18 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
             while time.time() < now + 10:
                 if num_frames:
                     log.info('Connected!')
+
+                    if callback:
+                        # prevent callback from being garbage collected,
+                        # which segaults python
+                        adapter.__callback = __callback
+
+                    else:
+                        __read = adapter.read
+                        def read():
+                            return read_block(__read())
+                        adapter.read = read
+
                     return adapter
 
                 time.sleep(1)
@@ -620,13 +628,14 @@ def main():
 
     frames = []
     def read(frame):
-        # print frame
+        print frame
         frames.append(frame)
-        pass
 
-    adapter = connect(bitrate='500',
-        flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP | FLAG_BLOCK)
-        # callback=read)
+    adapter = connect(
+        bitrate='500',
+        # flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP | FLAG_BLOCK
+        callback=read,
+    )
 
     fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
     try:
