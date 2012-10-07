@@ -595,7 +595,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
             while time.time() < now + 10:
                 if num_frames:
                     log.info('Connected!')
-                    return a
+                    return adapter
 
                 time.sleep(1)
                 s = adapter.status()
@@ -623,9 +623,9 @@ def main():
             s = adapter.status()
             print 'Status:', adapter.statusText(s)
 
-    except:
+    except KeyboardInterrupt:
         print('Writing log %s' % fname)
-        cPickle.dump(frames, open(fname, 'wb'), -1)
+        pickle.dump(frames, open(fname, 'wb'), -1)
 
 if __name__ == "__main__":
     main()
