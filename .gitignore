@@ -1,2 +1,4 @@
 Build
 carhack.sublime-*
+*.pyc
+
