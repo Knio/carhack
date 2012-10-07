@@ -505,7 +505,7 @@ class CanUSB(object):
 
 import time
 import logging
-from Frame import Frame
+from frame import Frame
 
 def connect(name=None, bitrate=None, flags=None, callback=None):
     '''
@@ -541,7 +541,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP
 
 
-    start = time.time()
+    start = [time.time()]
     last_ts = [90000]
     num_frames = [0]
     def read(frame):
@@ -549,9 +549,9 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         if flags & FLAG_TIMESTAMP:
             ms = frame.timestamp / 1000.
             if frame.timestamp < (last_ts[0] - 10000):
-                start = time.time() - ms
+                start[0] = time.time() - ms
             last_ts[0] = frame.timestamp
-            frame.normalized_timestamp = start + ms
+            frame.normalized_timestamp = start[0] + ms
         else:
             frame.normalized_timestamp = time.time()
 
@@ -574,7 +574,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         return frame
 
     if callback:
-        __callback = declareCallback(read)
+        __callback = declareCallback(read_cb)
     else:
         __callback = None
 
@@ -640,14 +640,14 @@ def main():
     fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
     try:
         while 1:
-            msg = adapter.read()
-            frame = Frame(msg)
-            frame.normalized_timestamp = time.time()
-            frames.append(frame)
-            print frame
-            # s = adapter.status()
-            # print 'Status:', adapter.statusText(s)
-            # time.sleep(0)
+            # msg = adapter.read()
+            # frame = Frame(msg)
+            # frame.normalized_timestamp = time.time()
+            # frames.append(frame)
+            # print frame
+            s = adapter.status()
+            print 'Status:', adapter.statusText(s)
+            time.sleep(2)
             pass
 
     except KeyboardInterrupt:
