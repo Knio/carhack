@@ -46,6 +46,12 @@ Active IDs with power in ACC or ON:
 ID 002 - Unknown
 ----------------
 
+interval 10ms
+
+IGN ACC: no data
+
+IGN ON:
+
 Sends every 10ms:
 
     (124, 255, 0, 7, 12)
@@ -368,9 +374,6 @@ IGN ON:
 
 
 
-
-
-
 ID 385 - Unknown
 ----------------
 
@@ -382,8 +385,8 @@ IGN ACC & ON
 
 
 
-ID 421 - 6MT Gear Shift Position
---------------------------------
+ID 421 - 6MT Gear Shift Position Sensor
+---------------------------------------
 
 interval 55ms
 
@@ -544,6 +547,24 @@ IGN ON:
     (0, 0, 121)
     (0, 0, 122)
     (0, 0, 123)
+
+
+
+
+
+
+
+
+Work In Progress
+----------------
+
+20121007.164633.983 ID:216
+20121007.164634.151 ID:1F9
+20121007.164634.213 ID:245
+20121007.164634.086 ID:280 Flags:0 Data: (1, 255, 192, 0, 0, 0, 162, 64)
+
+
+
 
 
 

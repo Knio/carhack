@@ -20,6 +20,7 @@ def main():
     frames = pickle.load(open(fname, 'rb'))
     for frame in frames:
         frame.data = tuple(frame.data)
+        # frame.data = tuple(map(hex,frame.data))
 
     last_id = {}
     skipped = 0
