@@ -12,5 +12,5 @@ class Frame(object):
         localtime = time.strftime('%Y%m%d.%H%M%S',
             time.localtime(self.normalized_timestamp))
         ss = self.normalized_timestamp - int(self.normalized_timestamp)
-        return '%s.%03d ID:%X Flags:%r Data: %r' % (
+        return '%s.%03d ID:%03X Flags:%r Data: %r' % (
             localtime, int(ss * 1000), self.id, self.flags, self.data)
