@@ -502,14 +502,34 @@ class CanUSB(object):
         return False
 
 
-
 import time
 import logging
-from frame import Frame
+from Frame import Frame
 
 def connect(name=None, bitrate=None, flags=None, callback=None):
     '''
-    Easy connect to first working adapter.
+    Connect to CAN adapter.
+
+    name
+        name of adapter. If not provided, will search all adapters
+        and return the first one that connects successfully
+
+    bitrate
+        bitrate to connect at. one of
+        "10", "20", "50", "100", "250", "500", "800", or "1000".
+        if not given, will try to connect at all rates until one works.
+
+    flags
+        pycanusb connect flags. default: FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP
+
+    callback
+        python function to call when a frame arrives.
+        if not provided, use adapter.read() to get frames
+
+
+    returns
+        adapter object
+
     '''
     log = logging.getLogger('pycanusb')
 
@@ -525,7 +545,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
 
     if bitrate is None:
         bitrates = [
-            "10",
+            "10"
             "20",
             "50",
             "100",
@@ -541,7 +561,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP
 
 
-    start = [time.time()]
+    start = time.time()
     last_ts = [90000]
     num_frames = [0]
     def read(frame):
@@ -549,9 +569,9 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         if flags & FLAG_TIMESTAMP:
             ms = frame.timestamp / 1000.
             if frame.timestamp < (last_ts[0] - 10000):
-                start[0] = time.time() - ms
+                start = time.time() - ms
             last_ts[0] = frame.timestamp
-            frame.normalized_timestamp = start[0] + ms
+            frame.normalized_timestamp = start + ms
         else:
             frame.normalized_timestamp = time.time()
 
@@ -574,7 +594,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         return frame
 
     if callback:
-        __callback = declareCallback(read_cb)
+        __callback = declareCallback(read)
     else:
         __callback = None
 
@@ -640,14 +660,14 @@ def main():
     fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
     try:
         while 1:
-            # msg = adapter.read()
-            # frame = Frame(msg)
-            # frame.normalized_timestamp = time.time()
-            # frames.append(frame)
-            # print frame
-            s = adapter.status()
-            print 'Status:', adapter.statusText(s)
-            time.sleep(2)
+            msg = adapter.read()
+            frame = Frame(msg)
+            frame.normalized_timestamp = time.time()
+            frames.append(frame)
+            print frame
+            # s = adapter.status()
+            # print 'Status:', adapter.statusText(s)
+            # time.sleep(0)
             pass
 
     except KeyboardInterrupt:
