@@ -40,7 +40,6 @@ Active IDs with power in ACC or ON:
 60D
 625
 6E2
-29
 
 
 
@@ -216,7 +215,7 @@ IGN ON:
     (0, 0, 0, 0, 0, 0, X, Y)
 
 * `X` - counts up from 0 to 255
-* `Y` - counts up from 0 to 255, +134 offset from `Y`
+* `Y` - counts up from 0 to 255, +134 offset from `X`
 
 
 
@@ -261,40 +260,290 @@ ID 2DE - Unknown
     * 6 again after
 
 
+ID 342 - Unknown
+----------------
+
+IGN ACC -> ON:
+
+    (3, 35, 162, 246)
+    (3, 44, 255, 255)
+
+
+
+ID 351 - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC:
+
+    (0, 0, 0, 0, 0, 0, 64, 0)
+
+
+IGN ON:
+
+    (0, 0, 0, 0, 0, 0, 64, 2)
+    (0, 0, 0, 0, 0, 64, 64, 2)
+    (0, 0, 0, 0, 0, 76, 64, 2) (repeat * 15)
+    (0, 0, 0, 0, 0, 12, 64, 2) (repeat)
+
+
+
+ID 354 - Unknown
+----------------
+
+interval 45ms
+
+IGN ACC: no data
+
+IGN ACC -> ON:
+
+    (0, 0, 0, 0, 42, 0, 4, 0)
+    (0, 0, 0, 0, 42, 8, 4, 0)
+    (0, 0, 0, 0, 42, 16, 4, 0)
+    (0, 0, 0, 0, 42, 24, 4, 0)
+    (repeat all)
+
+for 3s
+
+IGN ON:
+
+    (0, 0, 0, 0, 0, 0, 4, 0)
+    (0, 0, 0, 0, 0, 8, 4, 0)
+    (0, 0, 0, 0, 0, 16, 4, 0)
+    (0, 0, 0, 0, 0, 24, 4, 0)
+    (repeat all)
+
+
+
+ID 355 - Unknown
+----------------
+
+interval 45ms
+
+IGN ACC:
+
+    (0, 0, 255, 255, 32, 0, 96)
+
+IGN ON:
+
+    (0, 0, 0, 0, 32, 0, 96)
+
+
+
+ID 358 - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC:
+
+    (0, 10, 0, 0, 0, 0, 0, 0)
+
+IGN ACC -> ON:
+
+    (0, 10, 0, 32, 0, 0, 0, 0)
+    (4, 10, 0, 32, 0, 0, 0, 0)
+    (4, 10, 0, 32, 0, 0, 0, 0)
+    (4, 10, 0, 32, 128, 0, 0, 0) (* 10)
+
+IGN ON:
+
+    (4, 10, 0, 32, 0, 0, 0, 0)
+
+
+
+ID 35D - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC:
+
+    (0, 3, 0, 0, 0, 0, 0, 0)
+
+IGN ON:
+
+    (128, 3, 0, 0, 0, 0, 0, 0)
 
 
 
 
 
 
+ID 385 - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC & ON
+
+    (4, 0, 0, 0, 0, 0, 0)
+
+
+
+ID 421 - 6MT Gear Shift Position
+--------------------------------
+
+interval 55ms
+
+IGN ACC -> ON
+
+    (128, 1)
+
+IGN ON:
+
+    (X, 65)
+
+* `X` Gear shift position
+    * 24 - Neutral
+    * 128 - First
+    * 136 - Second
+    * 144 - Third
+    * 152 - Fourth
+    * 160 - Fifth
+    * 168 - Sixth
+    * 16 - Reverse
+
+
+
+ID 512 - Unknown
+----------------
+
+IGN ACC -> ON:
+
+    (3, 32, 42, 88)
+    (3, 44, 255, 255)
+
+
+
+ID 54C - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC: no data
+
+IGN ON:
+
+    (X, 99, 192, 0, 0, 128, 4, 8)
+
+* `X` - 157 or 158
+
+
+ID 551 - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC: no data
+
+IGN ON:
+
+    (60, 0, 0, 32, 255, 0, 128, 255) - (repeat for 3s)
+    (60, 0, 0, 160, 255, 0, 128, 255) - (repeat)
+
+
+ID 580 - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC: no data
+
+IGN ACC -> ON
+
+    (0, 0, 64, 0, 70)
+
+IGN ON:
+
+    (0, 0, 64, 8, 70)
+    (0, 0, 64, 10, 70)
+    (0, 0, 64, 12, 70)
+    (0, 0, 64, 14, 70)
+
+
+ID 5C5 - Unknown
+----------------
+
+interval 110ms
+
+IGN ACC:
+
+    (128, 0, 76, 156, 0, 12, 0, 127)
+
+
+IGN ON:
+
+    (68, 0, 76, 156, 0, 12, 0, 127)
+
+
+
+ID 60D - Headlight Select Request
+------------------------
+
+interval 110ms
+
+IGN ACC:
+
+    (0, 2, 8, 0, 0, 0, 0, 0)
+
+IGN ACC -> ON:
+
+    (0, 6, 8, 0, 0, 0, 0, 0)
+    (0, 6, 8, 42, 0, 0, 0, 0)
+
+
+IGN ON:
+
+    (X, 6, 8, 0, 0, 0, 0, 0)
+
+* `X` - Headlight select
+    * 0 - Auto
+    * 4 - DRL
+    * 6 - On
+
+
+ID 625 - Headlight Select Response
+----------------
+
+Similar to ID 60D
+
+IGN ACC:
+
+    (2, 0, 255, 14, 32, 0)
+
+
+IGN ACC -> ON:
+
+    (2, 0, 255, 13, 32, 0)
+
+
+IGN ON:
+
+    (2, X, 255, 157, 32, 0)
+
+* `X` - Headlight select
+    * 0 - Auto
+    * 64 - DRL
+    * 96 - On
 
 
 
 
+ID 6E2 - Unknown
+----------------
 
+interval 110ms
 
+IGN ACC: no data
 
+IGN ON:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    (0, 0, 120)
+    (0, 0, 121)
+    (0, 0, 122)
+    (0, 0, 123)
 
 
 
