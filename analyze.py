@@ -1,8 +1,7 @@
 import os
 import sys
 import time
-import cPickle as pickle
-import frame
+from canlog import CANLog
 
 def main():
     fname = sys.argv[1]
@@ -17,10 +16,7 @@ def main():
         if a == '-ss':
             skip_same = False
 
-    frames = pickle.load(open(fname, 'rb'))
-    for frame in frames:
-        frame.data = tuple(frame.data)
-        # frame.data = tuple(map(hex,frame.data))
+    frames = CANLog(fname)
 
     last_id = {}
     skipped = 0

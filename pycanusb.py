@@ -567,13 +567,14 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
     def read(frame):
         num_frames[0] += 1
         if flags & FLAG_TIMESTAMP:
-            ms = frame.timestamp / 1000.
-            if frame.timestamp < (last_ts[0] - 10000):
+            ts = frame.timestamp
+            ms = ts / 1000.
+            if ts < (last_ts[0] - 10000):
                 start = time.time() - ms
-            last_ts[0] = frame.timestamp
-            frame.normalized_timestamp = start + ms
+            last_ts[0] = ts
+            frame.timestamp = start + ms
         else:
-            frame.normalized_timestamp = time.time()
+            frame.timestamp = time.time()
 
         try:
             callback(frame)
@@ -643,7 +644,6 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
     raise Exception('No working adapters found')
 
 
-import cPickle as pickle
 def main():
 
     frames = []
@@ -662,7 +662,7 @@ def main():
         while 1:
             msg = adapter.read()
             frame = Frame(msg)
-            frame.normalized_timestamp = time.time()
+            frame.timestamp = time.time()
             frames.append(frame)
             print frame
             # s = adapter.status()
