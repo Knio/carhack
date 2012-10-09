@@ -504,9 +504,9 @@ class CanUSB(object):
 
 import time
 import logging
-from Frame import Frame
+from frame import Frame
 
-def connect(name=None, bitrate=None, flags=None, callback=None):
+def open(name=None, bitrate=None, flags=None, callback=None):
     '''
     Connect to CAN adapter.
 
@@ -561,7 +561,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP
 
 
-    start = time.time()
+    start = [time.time()]
     last_ts = [90000]
     num_frames = [0]
     def read(frame):
@@ -570,9 +570,9 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
             ts = frame.timestamp
             ms = ts / 1000.
             if ts < (last_ts[0] - 10000):
-                start = time.time() - ms
+                start[0] = time.time() - ms
             last_ts[0] = ts
-            frame.timestamp = start + ms
+            frame.timestamp = start[0] + ms
         else:
             frame.timestamp = time.time()
 
@@ -595,7 +595,7 @@ def connect(name=None, bitrate=None, flags=None, callback=None):
         return frame
 
     if callback:
-        __callback = declareCallback(read)
+        __callback = declareCallback(read_cb)
     else:
         __callback = None
 

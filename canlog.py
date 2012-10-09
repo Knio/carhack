@@ -27,6 +27,7 @@ class CANLog(object):
         return self.len + len(self.buffer)
 
     def close(self):
+        self.flush()
         self.file.close()
 
     def flush(self):
@@ -39,6 +40,4 @@ class CANLog(object):
         # self.file.flush()
 
     def __del__(self):
-        self.flush()
-        self.file.flush()
-        self.file.close()
+        self.close()
