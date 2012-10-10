@@ -52,37 +52,45 @@ IGN ACC: no data
 
 IGN ON:
 
-Sends every 10ms:
 
-    (124, 255, 0, 7, 12)
-    (124, 255, 0, 7, 29)
-    (124, 255, 0, 7, 46)
-    (124, 255, 0, 7, 63)
-    (124, 255, 0, 7, 192)
-    (124, 255, 0, 7, 209)
-    (124, 255, 0, 7, 226)
-    (124, 255, 0, 7, 243)
-    (124, 255, 0, 7, 132)
-    (124, 255, 0, 7, 149)
-    (124, 255, 0, 7, 166)
-    (124, 255, 0, 7, 183)
-    (124, 255, 0, 7, 72)
-    (124, 255, 0, 7, 89)
-    (124, 255, 0, 7, 106)
-    (124, 255, 0, 7, 123)
+    (X, Y, 0 or sometimes 1, 7, Z)
 
 
-4* +17
+* `X` - 127 - 204.
+* `Y` - 0 or 255
+* `Z` - 16-long repeating sequence
+
+X = 204: -15
+X = 203: +17
+X = 202: +17
+X = 124: +17
+
+?????
 
 ID 160 - Unknown
 ----------------
 
-When ignition goes from ACC to ON:
+interval 10ms
+
+IGN ON:
 
     (50, 3, 32, 0, 8, 255, 192)
     (61, 85, 217, 0, 8, 255, 224)
-    (61, 85, 220, 0, 8, 255, 224)  - (repeat every 10ms)
+    (61, 85, 220, 0, 8, 255, 224)
 
+IGN ENG:
+
+    (A, B, C, D, E, F, G)
+
+
+* `A`, `B` - sensor data, 16bits
+* `C` - sensor data. overflows go to `B`
+* `D` - sensor data. typically 0.
+* `E` - sensor data. 8, or 224 - G
+* `F` - sensor data. typically 255. related to `E` and `F`
+* `G` - sensor data. related to `E`. typically 224
+
+Looks like something related to the engine
 
 
 ID 180 -- Unknown
@@ -95,6 +103,10 @@ When IGN in ON:
 Sends once:
 
     (0, 0, 50, 3, 32, 0, 1, 0)
+
+    Sometimes:
+    (0, 0, 93, 147, 213, 0, 50, 16)
+    (0, 0, 93, 179, 213, 0, 51, 16)
 
 
 Sends every 10ms:
@@ -571,10 +583,20 @@ IGN ACC -> ON Sequence
 20121007.164634.305 ID:512 Flags:0 Data: (3, 44, 255, 255)
 
 
+----
+
+20121008.191328.656 ID:60D Flags:0 Data: (6, 6, 0, 42, 0, 0, 0, 0)
+
+20121008.191328.708 ID:5C5 Flags:0 Data: (68, 0, 76, 161, 0, 12, 0, 127)
+
+
+20121008.191519.726 ID:180 Flags:0 Data: (4, 126, 93, 195, 213, 0, 63, 21)
+20121008.191519.904 ID:580 Flags:0 Data: (0, 250, 64, 152, 69)
+20121008.191520.016 ID:580 Flags:0 Data: (1, 8, 64, 154, 69)
+20121008.191520.126 ID:580 Flags:0 Data: (1, 58, 64, 156, 69)
 
 
 
 
 
-
-
+20121008.191648.293 Stop

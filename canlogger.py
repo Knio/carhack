@@ -7,6 +7,7 @@ class CANLogger(object):
         fname = 'canlog.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
         self.log = canlog.CANLog(fname)
         self.adapter = pycanusb.open(bitrate='500', callback=self.read)
+        self.consumers = {}
 
     def simulate(self, frames):
         for frame in frames:
@@ -18,6 +19,12 @@ class CANLogger(object):
 
     def close(self):
         self.log.close()
+
+
+    def interactive(self):
+        import msvcrt
+        while 1:
+            c = getch()
 
 
 if __name__ == '__main__':
