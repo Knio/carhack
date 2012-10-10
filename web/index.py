@@ -6,9 +6,13 @@ def main(rh):
     doc = document(title='Carhack!')
 
     doc.head += script(src='/static/d3.v2.min.js')
-    doc.head += script(src='/static/pyy.min.js')
+    # doc.head += script(src='/static/pyy.min.js')
+    doc.head += script(src='https://raw.github.com/Knio/pyy.js/master/pyy.min.js')
 
     with doc:
+
+        div(id='cam')
+
         div('Hello world', id='main')
         script('''wsurl = 'ws://%s/ws';''' % rh.request.host)
         script(include('index.js'))
