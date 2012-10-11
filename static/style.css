@@ -1,0 +1,16 @@
+
+
+#data > div > div {
+    display: inline-block;
+}
+
+
+#data > div > div:first-child {
+    width: 200px;
+}
+
+
+#data > div > div > canvas {
+    border: 1px solid black;
+    margin: 10px;
+}

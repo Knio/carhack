@@ -20,7 +20,11 @@ class Webcam(object):
             from VideoCapture import Device
             # NOTE: must initialize this from the main thread, it seems
             self.cam = Device()
+            # ???
+            self.cam.getImage()
         except:
+            import traceback
+            traceback.print_exc()
             log.warn('webcam failed to initialize')
 
     def get_image(self):
@@ -36,7 +40,7 @@ class Webcam(object):
         if self.log_interval and self.last_log+self.log_interval < now:
             self.last_log = now
             fname = 'logs/webcam/cam.%s.jpg' % \
-                time.strftime('%Y-%m-%d.%H.%M.%S', now)
+                time.strftime('%Y-%m-%d.%H.%M.%S')
             open(fname, 'wb').write(self.jpeg_data)
 
         time.sleep(self.interval)
@@ -46,4 +50,5 @@ class Webcam(object):
             while 1:
                 self.tick()
         thread = threading.Thread(target=loop)
+        thread.daemon = True
         thread.start()

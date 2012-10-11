@@ -5,8 +5,9 @@ import canlog
 import pycanusb
 
 class CAN(object):
-    def __init__(self, logging=True):
-        self.adapter = open(bitrate='500', callback=self.read)
+    def __init__(self, simulate=False, logging=True):
+        if not simulate:
+            self.adapter = pycanusb.open(bitrate='500', callback=self.read)
         self.listeners = defaultdict(set)
         self.subscriptions = {}
         self.last_frame = {}
@@ -36,15 +37,17 @@ class CAN(object):
 
                 self.read(frame)
 
-        threading.Thread(target=go).start()
+        thread = threading.Thread(target=go)
+        thread.daemon = True
+        thread.start()
 
     def read(self, frame):
         id = frame.id
         last = self.last_frame.get(id)
         self.last_frame[id] = frame
-        duplicate = last.data == frame.data
+        duplicate = last and last.data == frame.data
         for k in [id, None]:
-            for sub, suppress_duplicates in self.consumers:
+            for sub, suppress_duplicates in self.listeners[k]:
                 if duplicate and suppress_duplicates:
                     continue
                 sub(frame)
