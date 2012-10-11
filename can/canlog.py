@@ -16,6 +16,8 @@ class CANLog(object):
         if len(self.buffer) > 10240:
             self.flush()
 
+    __call__ = append
+
     def __getitem__(self, i):
         if i < self.len:
             self.file.seek(i * length, 0)

@@ -26,7 +26,6 @@ ws.onerror = function(evt) {
 };
 
 
-
-setInterval(function() {
-    pyy('#cam').clear().img({src:'/cam.jpg', width:'640', height:'480'});
-}, 100);
+// setInterval(function() {
+//     pyy('#cam').clear().img({src:'/cam.jpg', width:'640', height:'480'});
+// }, 100);

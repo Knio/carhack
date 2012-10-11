@@ -1,3 +1,5 @@
+import logging
+
 import tornado.httpserver
 import tornado.websocket
 import tornado.ioloop
@@ -9,67 +11,68 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def allow_draft76(self):
         return True
 
+    def initialize(self, app):
+        self.app = app
+
     def open(self):
-        print 'new connection'
-        self.write_message("Hello World")
+        logging.getLogger('websocket').info('new connection')
 
     def on_message(self, message):
-        print 'message received %s' % message
+        logging.getLogger('websocket').info('message: %r', message)
+
         self.write_message(message)
 
+        # def read(frame):
+        #     self.write_message(frame.tojson())
+
+        # self.read =
+        # self.app.can.subscribe()
+
+
+
     def on_close(self):
-      print 'connection closed'
+        logging.getLogger('websocket').info('connection closed')
 
 class MainHandler(tornado.web.RequestHandler):
+    def initialize(self, app):
+        self.app = app
+
     def get(self):
         self.write(unicode(index.main(self)))
 
 class WebcamHandler(tornado.web.RequestHandler):
-    jpeg = None
-
-    @classmethod
-    def start(cls):
-        import time
-        import threading
-        from cStringIO import StringIO
-        from VideoCapture import Device
-        
-        cam = Device()
-        def loop():
-            while 1:
-                file = StringIO()
-                image = cam.getImage(1)
-                image.save(file, 'jpeg')
-                cls.jpeg = file.getvalue()
-                # TODO log image?
-                time.sleep(0.1)
-
-        thread = threading.Thread(target=loop)
-        thread.start()
+    def initialize(self, app):
+        self.app = app
 
     def get(self):
         self.set_header('Cache-Control', 'no-cache')
-        if not self.jpeg:
+        data = app.webcam.get_image()
+        if not data:
             self.set_status(503)
             self.write('camera offline, please try again later')
             return
         self.set_header('Content-Type', 'image/jpeg')
-        self.write(self.jpeg)
+        self.write(data)
 
-WebcamHandler.start()
 
-def main():
+class TornadoServer(object):
+    def __init__(self, carapp):
 
-    application = tornado.web.Application([
-        (r'/static/(.*)',   tornado.web.StaticFileHandler, dict(path='static')),
-        (r'/cam.jpg',       WebcamHandler),
-        (r'/ws',            WSHandler),
-        (r'/',              MainHandler),
-    ])
+        self.tornadoapp = tornado.web.Application([
+            (r'/static/(.*)',   tornado.web.StaticFileHandler, dict(path='static')),
+            (r'/cam.jpg',       WebcamHandler),
+            (r'/ws',            WSHandler, dict(app=carapp)),
+            (r'/',              MainHandler, dict(app=carapp)),
+        ])
 
-    http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8001)
-    tornado.ioloop.IOLoop.instance().start()
+        self.http_server = tornado.httpserver.HTTPServer(self.tornadoapp)
+        self.http_server.listen(8001)
+
+    def run(self):
+        # block forever
+        tornado.ioloop.IOLoop.instance().start()
+
 
 if __name__ == '__main__':
-    main()
+    server = TornadoServer(None)
+    server.start()
