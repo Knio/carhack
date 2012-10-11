@@ -1,7 +1,7 @@
 var U = pyy.utils;
 
-WIDTH = 128;
-HEIGHT = 128
+WIDTH = 512;
+HEIGHT = 32
 
 function graph() {
   
@@ -12,18 +12,24 @@ function graph() {
   ctx.fillStyle = '#0000dd';
   var data = [];
 
+  var scale = d3.scale.linear();
+  scale.domain([0, 256]);
+  scale.range([0, HEIGHT]);
+
+
   var draw = function() {
     var i;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     for (i=0;i<WIDTH;i++) {
-        ctx.fillRect(i, 0, 1, data[i] * HEIGHT / 256);
+        var ii = i + Math.max(0, data.length - WIDTH);
+        ctx.fillRect(i, 0, 1, scale(data[ii]));
     }
   }
 
   this.add = function(x) {
     data.push(x);
-    while (data.length > WIDTH) {
-        data.shift();
+    while (data.length > 2*WIDTH) {
+        data.splice(0, WIDTH);
     }
     draw();
   };

@@ -10,7 +10,8 @@
 }
 
 
-#data > div > div > canvas {
+#data > div > canvas {
     border: 1px solid black;
-    margin: 10px;
+    margin-top: -1px;
+    display: block;
 }

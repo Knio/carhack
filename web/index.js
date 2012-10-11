@@ -20,7 +20,7 @@ function debug_box(id) {
     this.graphs = [];
     for (var i=0; i<8; i++) {
         this.graphs[i] = new graph();
-        this.dom.div(this.graphs[i].canvas);
+        this.dom[0].appendChild(this.graphs[i].canvas);
     }
 }
 
@@ -38,10 +38,10 @@ function can() {
 
     ws.onopen = function(e) {
         dom.h3('Open');
-        ws.send(pyy.utils.json({ids:[1057]}));
+        ws.send(pyy.utils.json({ids:[1057, 2]}));
     };
     ws.onmessage = function(e) {
-        pyy('#frames').pre(e.data);
+        // pyy('#frames').pre(e.data);
         var f = new frame(e.data);
         var d = get_div(f.id);
         for (var i=0; i<f.len; i++) {
