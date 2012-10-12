@@ -72,6 +72,8 @@ ID 160 - Unknown
 
 interval 10ms
 
+Related to engine load/fuel/something
+
 IGN ON:
 
     (50, 3, 32, 0, 8, 255, 192)
@@ -96,6 +98,8 @@ Looks like something related to the engine
 ID 180 -- Unknown
 -----------------
 
+Related to throttle/fuel system.
+
 When IGN in ACC: no data
 
 When IGN in ON:
@@ -116,6 +120,10 @@ Sends every 10ms:
 where X counts up from 48 to 63 and repeats
 
 
+    (A, B, C, D, E, F, G, H)
+
+* `A`, `B` - 16bit integer
+* `F` - Throttle pedal postion, % (F/255 * 100)
 
 ID 182 - Unknown
 ----------------

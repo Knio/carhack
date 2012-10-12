@@ -38,7 +38,7 @@ function can() {
 
     ws.onopen = function(e) {
         dom.h3('Open');
-        ws.send(pyy.utils.json({ids:[1057, 2]}));
+        ws.send(pyy.utils.json({ids:[0x2]}));
     };
     ws.onmessage = function(e) {
         // pyy('#frames').pre(e.data);

@@ -24,9 +24,13 @@ class MainHandler(tornado.web.RequestHandler):
 class CarApp(object):
     def __init__(self):
         log.info('starting app')
-        self.can = can.CAN(logging=False, simulate=True)
+        self.can = can.CAN(logging=True, simulate=True)
         self.cam = camera.Webcam(self)
         self.cam.start()
+
+        def read(frame):
+            print frame
+        # self.can.subscribe(read)
 
     def run(self):
         self.tornadoapp = tornado.web.Application([

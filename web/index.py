@@ -6,8 +6,8 @@ def index(rh):
     doc = document(title='Carhack!')
 
     doc.head += script(src='/static/d3.v2.min.js')
-    # doc.head += script(src='/static/pyy.min.js')
-    doc.head += script(src='https://raw.github.com/Knio/pyy.js/master/pyy.min.js')
+    doc.head += script(src='/static/pyy.min.js')
+    # doc.head += script(src='https://raw.github.com/Knio/pyy.js/master/pyy.min.js')
 
     doc.head += link(rel='stylesheet', href='/static/style.css')
     with doc:
