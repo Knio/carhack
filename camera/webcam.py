@@ -46,6 +46,8 @@ class Webcam(object):
         time.sleep(self.interval)
 
     def start(self):
+        if not self.cam:
+            return
         def loop():
             while 1:
                 self.tick()

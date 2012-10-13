@@ -1,17 +1,35 @@
+@import url("http://reset5.googlecode.com/hg/reset.min.css");
+@import url("http://fonts.googleapis.com/css?family=Lato");
 
 
-#data > div > div {
-    display: inline-block;
+body {
+    font: 100 72px "lato";
+    text-transform: uppercase;
+    background-color: #333947;
+    color: #CAD1E0;
 }
 
-
-#data > div > div:first-child {
-    width: 200px;
+h1, h2, h3, h4, h5 {
+    font-weight: normal;
 }
 
+.byte0 { width: 4em; color: hsla(32,  70%, 70%, 1.0); }
+.byte1 { width: 4em; color: hsla(167, 70%, 70%, 1.0); }
+.byte2 { width: 4em; color: hsla(302, 70%, 70%, 1.0); }
+.byte3 { width: 4em; color: hsla(77,  70%, 70%, 1.0); }
+.byte4 { width: 4em; color: hsla(122, 70%, 70%, 1.0); }
+.byte5 { width: 4em; color: hsla(257, 70%, 70%, 1.0); }
+.byte6 { width: 4em; color: hsla(212, 70%, 70%, 1.0); }
+.byte7 { width: 4em; color: hsla(347, 70%, 70%, 1.0); }
 
-#data > div > canvas {
-    border: 1px solid black;
-    margin-top: -1px;
-    display: block;
+#data > div td:nth-child(1) {
+
+}
+#data > div td:nth-child(2) {
+    vertical-align: top;
+    text-align: right;
+    font-size: 30%;
+}
+#data > div td:nth-child(3) {
+    vertical-align: top;
 }

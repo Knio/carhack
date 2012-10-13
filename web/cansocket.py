@@ -19,15 +19,20 @@ class CanSocket(tornado.websocket.WebSocketHandler):
         log.info('message: %r', message)
         msg = json.loads(message)
 
+        if self.read:
+            self.app.can.unsubscribe(self.read)
+        self.read = None
+
         def read(frame):
             self.write_message(frame.tojson())
 
         self.read = read
-        self.app.can.subscribe(read, 
-            ids=msg.get('ids'), 
+        self.app.can.subscribe(read,
+            ids=msg.get('ids'),
             suppress_duplicates=msg.get('suppress_duplicates', False))
 
     def on_close(self):
         log.info('connection closed')
         if self.read:
             self.app.can.unsubscribe(self.read)
+        self.read = None

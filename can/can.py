@@ -1,18 +1,17 @@
 import time
 from collections import defaultdict
 
-import canlog
-import pycanusb
-
 class CAN(object):
     def __init__(self, simulate=False, logging=True):
         if not simulate:
+            import pycanusb
             self.adapter = pycanusb.open(bitrate='500', callback=self.read)
         self.listeners = defaultdict(set)
         self.subscriptions = {}
         self.last_frame = {}
 
         if logging:
+            import canlog
             fname = 'logs/can/canlog.%s.log' \
                 % time.strftime('%Y-%m-%d.%H.%M.%S')
             self.log = canlog.CANLog(fname)

@@ -24,12 +24,12 @@ class MainHandler(tornado.web.RequestHandler):
 class CarApp(object):
     def __init__(self):
         log.info('starting app')
-        self.can = can.CAN(logging=True, simulate=True)
+        self.can = can.CAN(logging=False, simulate=True)
         self.cam = camera.Webcam(self)
         self.cam.start()
 
-        def read(frame):
-            print frame
+        # def read(frame):
+        #     print frame
         # self.can.subscribe(read)
 
     def run(self):
@@ -42,7 +42,7 @@ class CarApp(object):
         ])
 
         self.http_server = tornado.httpserver.HTTPServer(self.tornadoapp)
-        self.http_server.listen(9001)
+        self.http_server.listen(8001)
 
         # block forever
         tornado.ioloop.IOLoop.instance().start()
@@ -51,7 +51,6 @@ class CarApp(object):
 if __name__ == '__main__':
     app = CarApp()
 
-    app.can.simulate(can.CANLog('canlog.2012-10-08.19.13.11.log'))
-    
+    app.can.simulate(can.CANLog('/home/tom/temp/canlog.2012-10-11.15.19.02.log'))
 
     app.run()
