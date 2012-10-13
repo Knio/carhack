@@ -19,11 +19,11 @@ class Frame(object):
             self.data = x[4:4+self.len]
 
         elif canmsg is None:
-            self.id         = 100
-            self.timestamp  = time.time()
-            self.flags      = 1
-            self.len        = 2
-            self.data       = (3,4)
+            self.id         = 0
+            self.timestamp  = 0
+            self.flags      = 0
+            self.len        = 0
+            self.data       = ()
 
         else:
             self.id         = canmsg.id

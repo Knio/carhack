@@ -80,7 +80,7 @@ function can() {
     window.setInterval(schedule_draw, 20);
 
     window.setInterval(function() {
-        if (frame_delay !== null && frame_delay > 10) {
+        if (frame_delay !== null) {
             frame_delay -= 10;
         }
         console.log(frame_delay);
@@ -100,8 +100,8 @@ function can() {
             }
         }
         if (frames_i > 10240) {
-            frames.splice(0, 10240);
-            frames_i -= 10240;
+            frames.splice(0, frames_i);
+            frames_i = 0;
         }
     }, 10);
 
