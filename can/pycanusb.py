@@ -633,6 +633,20 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                             return read_block(__read())
                         adapter.read = read
 
+
+                    __write = adapter.write
+                    def write(frame):
+                        msg = CANMsg()
+                        msg.id = frame.id
+                        msg.len = frame.len
+                        for i in xrange(frame.data):
+                            msg.data[i] = frame.data[i]
+                        res = __write(msg)
+                        if res is not True:
+                            raise IOError(res)
+
+                    adapter.write = write
+
                     return adapter
 
                 time.sleep(1)
