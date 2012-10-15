@@ -48,7 +48,7 @@ class OBD2(object):
 
     def query_block(self, mode, pid):
         self.query(mode, pid)
-        return self.read_block(mode, pid)
+        return self.read_block(mode & 0x40, pid)
 
 
     def read_block(self, mode, pid, timeout=1.0):
@@ -68,9 +68,7 @@ class OBD2(object):
 
 
     def init(self):
-        # - request all 'PID Supported' modes
-        # - dump all DTC error codes / one time data
-        # - start loop to request supported mode 0x01 values
+        # request all 'PID Supported' modes
 
         pid_mask = [0] * 0xE0
         for i in xrange(0, 0xE0, 0x20):
@@ -83,24 +81,35 @@ class OBD2(object):
         self.supported_pids = [i for i,s in enumerate(pid_mask) if s]
 
         log = []
-        for p in pids:
+        for p in self.supported_pids:
             pid = PID[p]
             log.append('%02x - %s' % (p, pid.desc))
 
         log.info('Vehicle supported PIDs: \n%s' %
             '\n'.join(log))
 
-        # - request vehicle info (VIN)
 
-    def timeout(self):
-        now = time.time()
-        i = 0;
-        for i, (t, g, s) in self.read_timeouts:
-            if t < now:
-                s.remove(g)
-            else:
-                break
-        self.read_timeouts[0:i] = []
+        # query all PIDs
+        for p in self.supported_pids:
+            self.query_pid_block(0x01, p)
+
+
+        # equest vehicle info (VIN)
+        supported_frame = self.query_block(0x09, 0x00)
+        if not frame.data[0] & 0x3:
+            # VIN not supported
+            pass
+
+        num_frames = self.query_block(0x09, 0x01).data[0]
+        self.query(0x09, 0x02)
+        vin_frames = [self.read_block(0x09 & 0x40, 0x02) for i in xrange(num_frames)]
+        vin_frames.sort(lambda x:x.data[0])
+        vin = map(chr, [i.data[1:] for i in vin_frames])
+        log.info('Vehicle VIN: %s' % vin)
+
+
+        # - dump all DTC error codes / one time data
+        # - start loop to request supported mode 0x01 values
 
 
     def read(self, frame):
@@ -115,10 +124,22 @@ class OBD2(object):
                 if pid_type.func:
                     value = pid_type.func(*obd2frame.data)
                 else:
-                    value = data
+                    value = obd2frame.data
                 log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
 
         waiting = self.read_waiters[mode, pid]
         for i in waiting:
-            i.switch(frame)
+            i.switch(obd2frame)
 
+
+    def query_pid_block(self, mode, pid):
+        frame = self.query_block(mode, pid)
+        pid_type = PID.get(frame.pid)
+        if pid_type:
+            if pid_type.func:
+                value = pid_type.func(*frame.data)
+            else:
+                value = data
+            log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
+        else:
+            log.info('PID %02X %s: %s' % (pid, 'Unknown', frame.data)))
