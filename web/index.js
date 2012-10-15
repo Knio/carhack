@@ -64,6 +64,7 @@ function can() {
     var divs = {};
     var frame_delay = null;
 
+    // try to render at 50Hz
     var drawing = false;
     var draw = function() {
         U.foreach(divs, function(d) {
@@ -71,7 +72,6 @@ function can() {
         });
         drawing = false;
     };
-
     var schedule_draw = function() {
         if (drawing) { return; }
         drawing = true;
@@ -83,10 +83,10 @@ function can() {
         if (frame_delay !== null) {
             frame_delay -= 10;
         }
-        console.log(frame_delay);
+        // console.log(frame_delay);
     }, 100);
 
-
+    // process incoming log at 100Hz
     var frames = [];
     var frames_i = 0;
     window.setInterval(function() {
@@ -130,7 +130,8 @@ function can() {
             frame_delay = ts - (new Date());
         };
         var delay = (ts - 0 + frame_delay) - (new Date());
-        // console.log(delay);
+        console.log(delay);
+        // this frame took a long time to arrive
         if (delay < 0) {
             frame_delay -= delay;
             delay = 0;

@@ -1,11 +1,19 @@
 import time
+import logging
+
+log = logging.getLogger('can')
+
 from collections import defaultdict
+
+import tornado.ioloop
+
+ioloop = tornado.ioloop.IOLoop.instance()
 
 class CAN(object):
     def __init__(self, simulate=False, logging=True):
         if not simulate:
             import pycanusb
-            self.adapter = pycanusb.open(bitrate='500', callback=self.read)
+            self.adapter = pycanusb.open(bitrate='500', callback=self.raw_read)
         self.listeners = defaultdict(set)
         self.subscriptions = {}
         self.last_frame = {}
@@ -16,6 +24,14 @@ class CAN(object):
                 % time.strftime('%Y-%m-%d.%H.%M.%S')
             self.log = canlog.CANLog(fname)
             self.subscribe(self.log)
+
+        ioloop.PeriodicCallback(self.status, 5000).start()
+
+
+    def status(self):
+        s = can.adapter.status()
+        log.info(can.adapter.statusText(s))
+        # TODO if status is bad, reconnect
 
     def simulate(self, frames):
         import threading
@@ -39,6 +55,15 @@ class CAN(object):
         thread = threading.Thread(target=go)
         thread.daemon = True
         thread.start()
+
+
+    def raw_read(self, frame):
+        '''
+        The CANUSB callback function runs in it's own thread.
+        Move the call to tornado's thread
+        '''
+        ioloop.add_callback(lambda:self.read(frame))
+
 
     def read(self, frame):
         id = frame.id
@@ -77,11 +102,8 @@ class CAN(object):
 
     def call_callback(self, callback, *args, **kwargs):
         try:
-            print 1
             callback(*args, **kwargs)
-            print 2
         except:
-            print 3
             import traceback
             traceback.print_exc()
 

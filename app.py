@@ -4,8 +4,11 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 
+ioloop = tornado.ioloop.IOLoop.instance()
+
 log = logging.getLogger()
-log.setLevel(0)
+logging.basicConfig(level=0)
+
 log.info("test")
 
 import can
@@ -33,6 +36,7 @@ class CarApp(object):
         #     print frame
         # self.can.subscribe(read)
 
+
     def run(self):
         self.tornadoapp = tornado.web.Application([
             (r'/static/(.*)',   tornado.web.StaticFileHandler, dict(path='static')),
@@ -46,7 +50,7 @@ class CarApp(object):
         self.http_server.listen(8001)
 
         # block forever
-        tornado.ioloop.IOLoop.instance().start()
+        ioloop.start()
 
 
 if __name__ == '__main__':
