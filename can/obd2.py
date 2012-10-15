@@ -34,7 +34,9 @@ class OBD2(object):
 
         self.supported_pids = []
 
-        greenlet.greenlet(self.init).switch()
+        def start():
+            greenlet.greenlet(self.init).switch()
+        ioloop.add_timeout(time.time() + 2, start)
 
 
     def query(self, mode, pid):
@@ -48,19 +50,19 @@ class OBD2(object):
 
     def query_block(self, mode, pid):
         self.query(mode, pid)
-        return self.read_block(mode & 0x40, pid)
+        return self.read_block(mode | 0x40, pid)
 
 
-    def read_block(self, mode, pid, timeout=1.0):
+    def read_block(self, mode, pid, timeout=5.0):
         current = greenlet.getcurrent()
         s = self.read_waiters[mode, pid]
         s.add(current)
 
         def timeout_cb():
             s.remove(current)
-            current.throw(IOError)
+            current.throw(IOError('Read timeout exceeded'))
 
-        _t = ioloop.add_timeout(now() + timeout, timeout_cb)
+        _t = ioloop.add_timeout(time.time() + timeout, timeout_cb)
         frame = current.parent.switch()
 
         ioloop.remove_timeout(_t)
@@ -69,6 +71,7 @@ class OBD2(object):
 
     def init(self):
         # request all 'PID Supported' modes
+        log.info('OBD2 Init')
 
         pid_mask = [0] * 0xE0
         for i in xrange(0, 0xE0, 0x20):
@@ -80,13 +83,13 @@ class OBD2(object):
 
         self.supported_pids = [i for i,s in enumerate(pid_mask) if s]
 
-        log = []
+        log_msg = []
         for p in self.supported_pids:
             pid = PID[p]
-            log.append('%02x - %s' % (p, pid.desc))
+            log_msg.append('%02x - %s' % (p, pid.desc))
 
         log.info('Vehicle supported PIDs: \n%s' %
-            '\n'.join(log))
+            '\n'.join(log_msg))
 
 
         # query all PIDs
@@ -113,9 +116,17 @@ class OBD2(object):
 
 
     def read(self, frame):
+        print 'Read:', frame
         log.info(str(frame))
 
         obd2frame = OBD2Frame(frame)
+
+        print obd2frame.mode, obd2frame.pid
+        print self.read_waiters
+        waiting = self.read_waiters[obd2frame.mode, obd2frame.pid]
+        for i in waiting:
+            i.switch(obd2frame)
+
 
         # mode 0x01 response
         if obd2frame.mode == 0x41:
@@ -125,11 +136,7 @@ class OBD2(object):
                     value = pid_type.func(*obd2frame.data)
                 else:
                     value = obd2frame.data
-                log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
-
-        waiting = self.read_waiters[mode, pid]
-        for i in waiting:
-            i.switch(obd2frame)
+                log.info('PID %02X %s: %s' % (obd2frame.pid, pid_type.desc, value))
 
 
     def query_pid_block(self, mode, pid):
@@ -142,4 +149,4 @@ class OBD2(object):
                 value = data
             log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
         else:
-            log.info('PID %02X %s: %s' % (pid, 'Unknown', frame.data)))
+            log.info('PID %02X %s: %s' % (pid, 'Unknown', frame.data))

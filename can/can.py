@@ -46,10 +46,10 @@ class CAN(object):
         self.last_frame[id] = frame
         duplicate = last and last.data == frame.data
         for k in [id, None]:
-            for sub, suppress_duplicates in self.listeners[k]:
+            for callback, suppress_duplicates in self.listeners[k]:
                 if duplicate and suppress_duplicates:
                     continue
-                sub(frame)
+                self.call_callback(callback, frame)
 
     # def interactive(self):
     #     import msvcrt
@@ -68,13 +68,22 @@ class CAN(object):
             if suppress_duplicates:
                 last = self.last_frame.get(id)
                 if last:
-                    callback(last)
+                    self.call_calback(callback, last)
 
     def unsubscribe(self, callback):
         ids, suppress_duplicates = self.subscriptions.pop(callback)
         for id in ids:
             self.listeners[id].remove((callback, suppress_duplicates))
 
+    def call_callback(self, callback, *args, **kwargs):
+        try:
+            print 1
+            callback(*args, **kwargs)
+            print 2
+        except:
+            print 3
+            import traceback
+            traceback.print_exc()
 
 if __name__ == '__main__':
     can = CAN()

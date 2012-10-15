@@ -168,7 +168,7 @@ ID 215 - Unknown
 
 Sends every 20ms:
 
-    (255, 240, 255, 0, 255, 255)
+    (255, 240, 255, 0, 255, 255)   
 
 
 
@@ -520,13 +520,27 @@ IGN ACC -> ON:
 
 IGN ON:
 
-    (X, 6, 8, 0, 0, 0, 0, 0)
+    (X, B, C, 0, 0, 0, 0, 0)
 
 * `X` - Headlight select
+    * 0 - Off
     * 0 - Auto
     * 4 - DRL
     * 6 - On
+    * 8 - Driver door open
+    * 16 - Passenger door open
 
+* `B` - Blinkers
+    * 6 - Off
+    * 38 - Left
+    * 70 - Right
+    * 102 - Hazards
+    * (left: 0x02, right: 0x04)
+
+* `C` - Door locks
+    * 0 - After DR door unlock request (everything unlocked)
+    * 24 - After DR door lock request (everything locked)
+    * 8 - DR manually unlocked, everything else locked
 
 ID 625 - Headlight Select Response
 ----------------
@@ -545,14 +559,22 @@ IGN ACC -> ON:
 
 IGN ON:
 
-    (2, X, 255, 157, 32, 0)
+    (A, X, 255, 157, 32, 0)
+
+* `A` - Climate Control
+    * 2 - Rear defrost LED off
+    * 3 - Rear defrost LED on
+    * 4, 6, 8, 10 - Wipers (?)
 
 * `X` - Headlight select
+    * 0 - Off
     * 0 - Auto
     * 64 - DRL
     * 96 - On
-
-
+    * 112 - Hi & On
+    * 112 - Hi & DRL
+    * 128 - AC LED on
+    * 0 - AC LED off
 
 
 ID 6E2 - Unknown

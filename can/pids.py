@@ -1,4 +1,4 @@
-__all__ = ['PIDS']
+__all__ = ['PIDS', 'PID']
 
 import struct
 

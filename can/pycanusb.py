@@ -639,11 +639,12 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                         msg = CANMsg()
                         msg.id = frame.id
                         msg.len = frame.len
-                        for i in xrange(frame.data):
+                        for i in xrange(frame.len):
                             msg.data[i] = frame.data[i]
                         res = __write(msg)
                         if res is not True:
-                            raise IOError(res)
+                            raise IOError(res, "Failed to write to adapter")
+                        print 'Write:', frame
 
                     adapter.write = write
 
