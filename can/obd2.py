@@ -18,6 +18,7 @@ ioloop = tornado.ioloop.IOLoop.instance()
 class TimeoutError(IOError):
     pass
 
+
 class OBD2Frame(object):
     def __init__(self, frame):
         self.id     = frame.id;
@@ -25,6 +26,7 @@ class OBD2Frame(object):
         self.mode   = frame.data[1]
         self.pid    = frame.data[2]
         self.data   = frame.data[3:self.len+3-2]
+
 
 class OBD2(object):
     def __init__(self, can):
@@ -36,8 +38,7 @@ class OBD2(object):
 
         self.supported_pids = []
 
-        def start():
-            greenlet.greenlet(self.init).switch()
+        start = lambda:greenlet.greenlet(self.init).switch()
         ioloop.add_timeout(time.time() + 2, start)
 
 
@@ -85,33 +86,20 @@ class OBD2(object):
 
 
     def read(self, frame):
-        # print 'Read:', frame
-        # log.info('     Read: %s' % frame)
-
         obd2frame = OBD2Frame(frame)
 
-        # print obd2frame.mode, obd2frame.pid
-        # print self.read_waiters
         waiting = self.read_waiters[obd2frame.mode, obd2frame.pid]
         for i in waiting:
             i.switch(obd2frame)
 
-
-        # mode 0x01 response
-        if obd2frame.mode == 0x41:
-            pid_type = PID.get(obd2frame.pid)
-            if pid_type:
-                if pid_type.func:
-                    value = pid_type.func(*obd2frame.data)
-                else:
-                    value = obd2frame.data
-                # log.info('PID %02X %s: %s' % (obd2frame.pid, pid_type.desc, value))
+        if not waiting:
+            log.info(frame)
 
 
     def get_supported_pids(self):
         # TODO multiple ECUs could respond here.
         # make table for each
-        supported = []
+        supported = [0]
         for i in xrange(0, 0xFF, 0x20):
             frame = self.query_block(0x01, i)
             for j, byte in enumerate(frame.data):

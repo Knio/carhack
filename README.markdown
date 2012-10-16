@@ -11,12 +11,18 @@ CANUSB Adapter: http://canusb.com
 
 Tested on `Win XP 32bit` (works) and `Win 7 64bit` (works, using 32bit python)
 
+* Buy a CANUSB adapter
+
+* Buy an OBD2 to DB9 cable
+    * https://www.sparkfun.com/products/10087 works
+        * But you have to rewire it. See `wiring.markdown`
 
 * Install Python (tested with 2.7) 32bit
     * Install setuptools
     * Install pip
     * Install tornado
     * Install pyy
+    * Install greenlet
 
 
 * Install CANUSB FTDI Drivers
@@ -61,6 +67,8 @@ Data
 ----
 
 https://ting.com/devices/SierraU250
+
+Has GPS too
 
 
 
