@@ -15,6 +15,8 @@ OBD2_IDS = [0x7E8, 0x7E9, 0x7EA, 0x7EB, 0x7EC, 0x7ED, 0x7EE, 0x7EF]
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
+class TimeoutError(IOError):
+    pass
 
 class OBD2Frame(object):
     def __init__(self, frame):
@@ -60,7 +62,7 @@ class OBD2(object):
 
         def timeout_cb():
             s.remove(current)
-            current.throw(IOError('Read timeout exceeded'))
+            current.throw(TimeoutError('Read timeout exceeded'))
 
         _t = ioloop.add_timeout(time.time() + timeout, timeout_cb)
         frame = current.parent.switch()
@@ -69,66 +71,17 @@ class OBD2(object):
         return frame
 
 
-    def init(self):
-        # request all 'PID Supported' modes
-        log.info('OBD2 Init')
-
-        pid_mask = [0] * 0xE0
-        for i in xrange(0, 0xE0, 0x20):
-            try:
-                frame = self.query_block(0x01, i)
-                for j,b in enumerate(frame.data):
-                    # print j
-                    for k in xrange(8):
-                        pid_mask[i + 8*j + k] = b & (1<<k)
-            except IOError:
-                print 'Timeout'
-
-        self.supported_pids = [i for i,s in enumerate(pid_mask) if s]
-
-        # print pid_mask
-        # print self.supported_pids
-
-        log_msg = []
-        for p in self.supported_pids:
-            pid = PID.get(p)
-            if pid:
-                log_msg.append('%02x - %s' % (p, pid.desc))
+    def query_pid_block(self, mode, pid):
+        frame = self.query_block(mode, pid)
+        pid_type = PID.get(frame.pid)
+        if pid_type:
+            if pid_type.func:
+                value = pid_type.func(*frame.data)
             else:
-                log_msg.append('%02x - %s' % (p, 'Unknown'))
-
-        log.info('Vehicle supported PIDs: \n%s' %
-            '\n'.join(log_msg))
-
-
-        # query all PIDs
-        for p in self.supported_pids:
-            try:
-                self.query_pid_block(0x01, p)
-            except IOError:
-                print 'Error', p
-
-        # equest vehicle info (VIN)
-        supported_frame = self.query_block(0x09, 0x00)
-        if not frame.data[0] & 0x3:
-            print 'VIN not supported'
-            print map(hex, frame.data)
-
-        try:
-            num_frames = self.query_block(0x09, 0x01).data[0]
-        except IOError:
-            print 'num frames not supported'
-            num_frames = 1
-        self.query(0x09, 0x02)
-        vin_frames = [self.read_block(0x09 & 0x40, 0x02) for i in xrange(num_frames)]
-        print vin_frames
-        vin_frames.sort(lambda x:x.data[0])
-        vin = map(chr, [i.data[1:] for i in vin_frames])
-        log.info('Vehicle VIN: %s' % vin)
-
-
-        # - dump all DTC error codes / one time data
-        # - start loop to request supported mode 0x01 values
+                value = frame.data
+            log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
+        else:
+            log.info('PID %02X %s: %s' % (pid, 'Unknown', frame.data))
 
 
     def read(self, frame):
@@ -155,14 +108,65 @@ class OBD2(object):
                 # log.info('PID %02X %s: %s' % (obd2frame.pid, pid_type.desc, value))
 
 
-    def query_pid_block(self, mode, pid):
-        frame = self.query_block(mode, pid)
-        pid_type = PID.get(frame.pid)
-        if pid_type:
-            if pid_type.func:
-                value = pid_type.func(*frame.data)
+    def init(self):
+        # request all 'PID Supported' modes
+        log.info('OBD2 Init')
+
+        pid_mask = [0] * 0xE0
+        for i in xrange(0, 0xE0, 0x20):
+            try:
+                frame = self.query_block(0x01, i)
+                for j,b in enumerate(frame.data):
+                    # print j
+                    for k in xrange(8):
+                        pid_mask[i + 8*j + k] = b & (1<<k)
+            except TimeoutError:
+                print 'Timeout'
+
+        self.supported_pids = [i for i,s in enumerate(pid_mask) if s]
+
+        # print pid_mask
+        # print self.supported_pids
+
+        log_msg = []
+        for p in self.supported_pids:
+            pid = PID.get(p)
+            if pid:
+                log_msg.append('%02x - %s' % (p, pid.desc))
             else:
-                value = frame.data
-            log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
-        else:
-            log.info('PID %02X %s: %s' % (pid, 'Unknown', frame.data))
+                log_msg.append('%02x - %s' % (p, 'Unknown'))
+
+        log.info('Vehicle supported PIDs: \n%s' %
+            '\n'.join(log_msg))
+
+
+        # query all PIDs
+        for p in self.supported_pids:
+            try:
+                self.query_pid_block(0x01, p)
+            except TimeoutError:
+                print 'Error', p
+
+        # equest vehicle info (VIN)
+        supported_frame = self.query_block(0x09, 0x00)
+        if not frame.data[0] & 0x3:
+            print 'VIN not supported'
+            print map(hex, frame.data)
+
+        try:
+            num_frames = self.query_block(0x09, 0x01).data[0]
+        except TimeoutError:
+            print 'num frames not supported'
+            num_frames = 1
+        self.query(0x09, 0x02)
+        vin_frames = [self.read_block(0x09 & 0x40, 0x02) for i in xrange(num_frames)]
+        print vin_frames
+        vin_frames.sort(lambda x:x.data[0])
+        vin = map(chr, [i.data[1:] for i in vin_frames])
+        log.info('Vehicle VIN: %s' % vin)
+
+
+        # - dump all DTC error codes / one time data
+        # - start loop to request supported mode 0x01 values
+
+

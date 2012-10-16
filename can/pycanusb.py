@@ -29,13 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from ctypes import *
 from ctypes.wintypes import LPCSTR, LPSTR
 
-##
-# @package pycanusb
-
-# define CANUSB_ACCEPTANCE_CODE_ALL 0x00000000
-ACCEPTANCE_CODE_ALL         = 0
-# CANUSB_ACCEPTANCE_MASK_ALL 0xFFFFFFFF
-ACCEPTANCE_MASK_ALL         = 4294967295
+ACCEPTANCE_CODE_ALL         = 0x00000000
+ACCEPTANCE_MASK_ALL         = 0xFFFFFFFF
 
 STATUS_RECEIVE_FIFO_FULL    = 1
 STATUS_TRANSMIT_FIFO_FULL   = 2
@@ -47,17 +42,17 @@ STATUS_BUS_ERROR            = 128
 
 # Error return codes
 ERROR_OK                    = 1
-ERROR_GENERAL               =-1
-ERROR_OPEN_SUBSYSTEM        =-2
-ERROR_COMMAND_SUBSYSTEM     =-3
-ERROR_NOT_OPEN              =-4
-ERROR_TX_FIFO_FULL          =-5
-ERROR_INVALID_PARAM         =-6
-ERROR_NO_MESSAGE            =-7
-ERROR_MEMORY_ERROR          =-8
-ERROR_NO_DEVICE             =-9
-ERROR_TIMEOUT               =-10
-ERROR_INVALID_HARDWARE      =-11
+ERROR_GENERAL               = -1
+ERROR_OPEN_SUBSYSTEM        = -2
+ERROR_COMMAND_SUBSYSTEM     = -3
+ERROR_NOT_OPEN              = -4
+ERROR_TX_FIFO_FULL          = -5
+ERROR_INVALID_PARAM         = -6
+ERROR_NO_MESSAGE            = -7
+ERROR_MEMORY_ERROR          = -8
+ERROR_NO_DEVICE             = -9
+ERROR_TIMEOUT               = -10
+ERROR_INVALID_HARDWARE      = -11
 
 # Open flags
 FLAG_TIMESTAMP       = 1  # Timestamp messages
@@ -642,6 +637,7 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                         for i in xrange(frame.len):
                             msg.data[i] = frame.data[i]
                         res = __write(msg)
+                        adapter.flush(FLUSH_WAIT)
                         time.sleep(0.1)
                         log.info('Write: %s (res: %s)' % (frame, res))
                         if res is not True:

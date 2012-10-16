@@ -168,7 +168,7 @@ ID 215 - Unknown
 
 Sends every 20ms:
 
-    (255, 240, 255, 0, 255, 255)   
+    (255, 240, 255, 0, 255, 255)
 
 
 
@@ -506,47 +506,49 @@ IGN ON:
 
 
 
-ID 60D - Headlight Select Request
-------------------------
+ID 60D - Body Control Module
+----------------------------
 
 interval 110ms
 
-IGN ACC:
+Active with IGN ACC, ON
 
-    (0, 2, 8, 0, 0, 0, 0, 0)
+* `A` - Body Status
+    * `A0` - 0
+    * `A1` - Headlights on(1)
+    * `A2` - Running lights on(1)
+    * `A3` - 0
+    * `A4` - Driver door open(1)
+    * `A5` - Passenger door open(1)
+    * `A6` - 0
+    * `A7` - 0
 
-IGN ACC -> ON:
+* `B` - Turn Signal Status
+    * `B0` - 0
+    * `B1` - 1
+    * `B2` - 1
+    * `B3` - 0
+    * `B4` - 0
+    * `B5` - Left turn signal active(1)
+    * `B6` - Right turn signal active(1)
+    * `B7` - 0
 
-    (0, 6, 8, 0, 0, 0, 0, 0)
-    (0, 6, 8, 42, 0, 0, 0, 0)
+* `C` - Lock Status
+    * `C0` - 0
+    * `C1` - 0
+    * `C2` - 0
+    * `C3` - Driver door locked(1)
+    * `C4` - Other locked(1)
+    * `C5` - 0
+    * `C6` - 0
+    * `C7` - 0
+
+* `D` - Unknown
+    * Pulses 42 when IGN ACC->ON
 
 
-IGN ON:
-
-    (X, B, C, 0, 0, 0, 0, 0)
-
-* `X` - Headlight select
-    * 0 - Off
-    * 0 - Auto
-    * 4 - DRL
-    * 6 - On
-    * 8 - Driver door open
-    * 16 - Passenger door open
-
-* `B` - Blinkers
-    * 6 - Off
-    * 38 - Left
-    * 70 - Right
-    * 102 - Hazards
-    * (left: 0x02, right: 0x04)
-
-* `C` - Door locks
-    * 0 - After DR door unlock request (everything unlocked)
-    * 24 - After DR door lock request (everything locked)
-    * 8 - DR manually unlocked, everything else locked
-
-ID 625 - Headlight Select Response
-----------------
+ID 625 - Body Control Module
+----------------------------
 
 Similar to ID 60D
 
@@ -562,22 +564,23 @@ IGN ACC -> ON:
 
 IGN ON:
 
-    (A, X, 255, 157, 32, 0)
+    (A, B, 255, 157, 32, 0)
 
 * `A` - Climate Control
-    * 2 - Rear defrost LED off
-    * 3 - Rear defrost LED on
-    * 4, 6, 8, 10 - Wipers (?)
+    * `A0` - Rear defrost LED on(1)
+    * 2 - Idle
+    * 4, 6, 8, 10 - Wipers active(?)
 
-* `X` - Headlight select
-    * 0 - Off
-    * 0 - Auto
-    * 64 - DRL
-    * 96 - On
-    * 112 - Hi & On
-    * 112 - Hi & DRL
-    * 128 - AC LED on
-    * 0 - AC LED off
+
+* `B` - Body
+    * `A0` - 0
+    * `A1` - 0
+    * `A2` - 0
+    * `A3` - 0
+    * `A4` - Hi-beams on(1)
+    * `A5` - Headlights on(1)
+    * `A6` - Running lights on(1)
+    * `A7` - AC LED on(1)
 
 
 ID 6E2 - Unknown
