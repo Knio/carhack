@@ -25,12 +25,13 @@ class CAN(object):
             self.log = canlog.CANLog(fname)
             self.subscribe(self.log)
 
-        ioloop.PeriodicCallback(self.status, 5000).start()
+        tornado.ioloop.PeriodicCallback(self.status, 5000).start()
 
 
     def status(self):
-        s = can.adapter.status()
-        log.info(can.adapter.statusText(s))
+        s = self.adapter.status()
+        if s != 0:
+            log.info(self.adapter.statusText(s))
         # TODO if status is bad, reconnect
 
     def simulate(self, frames):

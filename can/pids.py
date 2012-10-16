@@ -258,7 +258,8 @@ PIDS = [
     (0x4E, 2, 'Time since trouble codes cleared',
         lambda A: ((A*256)+B)),
 
-    # (0x4F, 4, 'Maximum value for equivalence ratio, oxygen sensor voltage, oxygen sensor current, and intake manifold absolute pressure',     '0, 0, 0, 0',     '255, 255, 255, 2550',     ', V, mA, kPa',     'A, B, C, D*10'),
+    (0x4F, 4, 'Maximum value for equivalence ratio, oxygen sensor voltage, oxygen sensor current, and intake manifold absolute pressure (V, mA, kPa)', 
+        lambda A,B,C,D: (A, B, C, D*10)),
 
     # (0x50, 4, 'Maximum value for air flow rate from mass air flow sensor',     '0',     '2550',     'g/s',     'A*10, B, C, and D are reserved for future use'),
 

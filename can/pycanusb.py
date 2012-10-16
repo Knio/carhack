@@ -642,9 +642,10 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                         for i in xrange(frame.len):
                             msg.data[i] = frame.data[i]
                         res = __write(msg)
+                        time.sleep(0.1)
+                        log.info('Write: %s (res: %s)' % (frame, res))
                         if res is not True:
                             raise IOError(res, "Failed to write to adapter")
-                        print 'Write:', frame
 
                     adapter.write = write
 

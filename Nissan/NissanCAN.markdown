@@ -465,8 +465,11 @@ IGN ACC: no data
 IGN ON:
 
     (60, 0, 0, 32, 255, 0, 128, 255) - (repeat for 3s)
-    (60, 0, 0, 160, 255, 0, 128, 255) - (repeat)
+    (A, B, 0, 160, 255, 0, 128, 255) - (repeat)
 
+
+* `A` - Sensor data (temp?)
+* `B` - Counts up from 0 to 255 (only when engine running)
 
 ID 580 - Unknown
 ----------------

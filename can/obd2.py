@@ -22,7 +22,7 @@ class OBD2Frame(object):
         self.len    = frame.data[0]
         self.mode   = frame.data[1]
         self.pid    = frame.data[2]
-        self.data   = frame.data[3:self.len]
+        self.data   = frame.data[3:self.len+3-2]
 
 class OBD2(object):
     def __init__(self, can):
@@ -53,7 +53,7 @@ class OBD2(object):
         return self.read_block(mode | 0x40, pid)
 
 
-    def read_block(self, mode, pid, timeout=5.0):
+    def read_block(self, mode, pid, timeout=1.0):
         current = greenlet.getcurrent()
         s = self.read_waiters[mode, pid]
         s.add(current)
@@ -75,18 +75,27 @@ class OBD2(object):
 
         pid_mask = [0] * 0xE0
         for i in xrange(0, 0xE0, 0x20):
-            frame = self.query_block(0x01, i)
-            for j in frame.data:
-                for k in xrange(8):
-                    pid_mask[i + k] = j & 1
-                    j <<= 1
+            try:
+                frame = self.query_block(0x01, i)
+                for j,b in enumerate(frame.data):
+                    # print j
+                    for k in xrange(8):
+                        pid_mask[i + 8*j + k] = b & (1<<k)
+            except IOError:
+                print 'Timeout'
 
         self.supported_pids = [i for i,s in enumerate(pid_mask) if s]
 
+        # print pid_mask
+        # print self.supported_pids
+
         log_msg = []
         for p in self.supported_pids:
-            pid = PID[p]
-            log_msg.append('%02x - %s' % (p, pid.desc))
+            pid = PID.get(p)
+            if pid:
+                log_msg.append('%02x - %s' % (p, pid.desc))
+            else:
+                log_msg.append('%02x - %s' % (p, 'Unknown'))
 
         log.info('Vehicle supported PIDs: \n%s' %
             '\n'.join(log_msg))
@@ -94,18 +103,25 @@ class OBD2(object):
 
         # query all PIDs
         for p in self.supported_pids:
-            self.query_pid_block(0x01, p)
-
+            try:
+                self.query_pid_block(0x01, p)
+            except IOError:
+                print 'Error', p
 
         # equest vehicle info (VIN)
         supported_frame = self.query_block(0x09, 0x00)
         if not frame.data[0] & 0x3:
-            # VIN not supported
-            pass
+            print 'VIN not supported'
+            print map(hex, frame.data)
 
-        num_frames = self.query_block(0x09, 0x01).data[0]
+        try:
+            num_frames = self.query_block(0x09, 0x01).data[0]
+        except IOError:
+            print 'num frames not supported'
+            num_frames = 1
         self.query(0x09, 0x02)
         vin_frames = [self.read_block(0x09 & 0x40, 0x02) for i in xrange(num_frames)]
+        print vin_frames
         vin_frames.sort(lambda x:x.data[0])
         vin = map(chr, [i.data[1:] for i in vin_frames])
         log.info('Vehicle VIN: %s' % vin)
@@ -116,13 +132,13 @@ class OBD2(object):
 
 
     def read(self, frame):
-        print 'Read:', frame
-        log.info(str(frame))
+        # print 'Read:', frame
+        log.info('     Read: %s' % frame)
 
         obd2frame = OBD2Frame(frame)
 
-        print obd2frame.mode, obd2frame.pid
-        print self.read_waiters
+        # print obd2frame.mode, obd2frame.pid
+        # print self.read_waiters
         waiting = self.read_waiters[obd2frame.mode, obd2frame.pid]
         for i in waiting:
             i.switch(obd2frame)
@@ -136,7 +152,7 @@ class OBD2(object):
                     value = pid_type.func(*obd2frame.data)
                 else:
                     value = obd2frame.data
-                log.info('PID %02X %s: %s' % (obd2frame.pid, pid_type.desc, value))
+                # log.info('PID %02X %s: %s' % (obd2frame.pid, pid_type.desc, value))
 
 
     def query_pid_block(self, mode, pid):
@@ -146,7 +162,7 @@ class OBD2(object):
             if pid_type.func:
                 value = pid_type.func(*frame.data)
             else:
-                value = data
+                value = frame.data
             log.info('PID %02X %s: %s' % (pid, pid_type.desc, value))
         else:
             log.info('PID %02X %s: %s' % (pid, 'Unknown', frame.data))

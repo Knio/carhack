@@ -36,8 +36,9 @@ class Frame(object):
         localtime = time.strftime('%Y%m%d.%H%M%S',
             time.localtime(self.timestamp))
         ss = self.timestamp - int(self.timestamp)
-        return '%s.%03d ID:%03X Flags:%r Data: %r' % (
-            localtime, int(ss * 1000), self.id, self.flags, self.data)
+        data = '(%s)' % ', '.join('%3d' % i for i in self.data)
+        return '%s.%03d ID:%03X Flags:%r Data: %s' % (
+            localtime, int(ss * 1000), self.id, self.flags, data)
 
     def tostring(self):
         data = self.data + ((0,)*(8-self.len))
