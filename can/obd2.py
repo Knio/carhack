@@ -86,7 +86,7 @@ class OBD2(object):
 
     def read(self, frame):
         # print 'Read:', frame
-        log.info('     Read: %s' % frame)
+        # log.info('     Read: %s' % frame)
 
         obd2frame = OBD2Frame(frame)
 
@@ -143,22 +143,16 @@ class OBD2(object):
         print vin_frames
         vin_frames.sort(lambda x:x.data[0])
         vin = map(chr, [i.data[1:] for i in vin_frames])
+        print vin
 
         return vin
 
 
     def init(self):
-        # request all 'PID Supported' modes
         log.info('OBD2 Init')
 
-        pid_mask = [0] * 0xE0
-        for i in xrange(0, 0xFF, 0x20):
-            frame = self.query_block(0x01, i)
-            for j,b in enumerate(frame.data):
-                for k in xrange(8):
-                    pid_mask[i + 8*j + k + 1] = b & (1<<k)
-            if not frame.data[4] &
-
+        # self.get_vin()
+        # return
 
         self.supported_pids = self.get_supported_pids()
         print self.supported_pids

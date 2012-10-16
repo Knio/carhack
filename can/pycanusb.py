@@ -641,13 +641,13 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                         # Do we need to do this?
                         res_f = adapter.flush(FLUSH_WAIT)
 
-                        log.info('Write: %s (res: %s)' % (frame, (res, res_f)))
+                        # log.info('Write: %s (res: %s)' % (frame, (res, res_f)))
 
                         if res is not True:
                             raise IOError(res, "Failed to write to adapter")
 
                         if not res_f > 0:
-                            raise IOError(res_f, "Failed to flush adapter"
+                            raise IOError(res_f, "Failed to flush adapter")
 
                     adapter.write = write
 

@@ -253,10 +253,10 @@ PIDS = [
         lambda A: (A*100/255)),
 
     (0x4D, 2, 'Time run with MIL on (minutes)',
-        lambda A: ((A*256)+B)),
+        lambda A,B: ((A*256)+B)),
 
     (0x4E, 2, 'Time since trouble codes cleared',
-        lambda A: ((A*256)+B)),
+        lambda A,B: ((A*256)+B)),
 
     (0x4F, 4, 'Maximum value for equivalence ratio, oxygen sensor voltage, oxygen sensor current, and intake manifold absolute pressure (V, mA, kPa)', 
         lambda A,B,C,D: (A, B, C, D*10)),
