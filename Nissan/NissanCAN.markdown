@@ -511,7 +511,13 @@ ID 60D - Body Control Module
 
 interval 110ms
 
+length: 8
+
 Active with IGN ACC, ON
+
+Sample:
+
+    (0, 6, 8, 42, 0, 0, 0, 0)
 
 * `A` - Body Status
     * `A0` - 0
@@ -523,6 +529,7 @@ Active with IGN ACC, ON
     * `A6` - 0
     * `A7` - 0
 
+
 * `B` - Turn Signal Status
     * `B0` - 0
     * `B1` - 1
@@ -533,6 +540,7 @@ Active with IGN ACC, ON
     * `B6` - Right turn signal active(1)
     * `B7` - 0
 
+
 * `C` - Lock Status
     * `C0` - 0
     * `C1` - 0
@@ -542,6 +550,7 @@ Active with IGN ACC, ON
     * `C5` - 0
     * `C6` - 0
     * `C7` - 0
+
 
 * `D` - Unknown
     * Pulses 42 when IGN ACC->ON
@@ -565,6 +574,7 @@ IGN ACC -> ON:
 IGN ON:
 
     (A, B, 255, 157, 32, 0)
+
 
 * `A` - Climate Control
     * `A0` - Rear defrost LED on(1)

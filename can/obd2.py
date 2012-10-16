@@ -55,7 +55,7 @@ class OBD2(object):
         return self.read_block(mode | 0x40, pid)
 
 
-    def read_block(self, mode, pid, timeout=1.0):
+    def read_block(self, mode, pid, timeout=0.5):
         current = greenlet.getcurrent()
         s = self.read_waiters[mode, pid]
         s.add(current)
@@ -108,25 +108,60 @@ class OBD2(object):
                 # log.info('PID %02X %s: %s' % (obd2frame.pid, pid_type.desc, value))
 
 
+    def get_supported_pids(self):
+        # TODO multiple ECUs could respond here.
+        # make table for each
+        supported = []
+        for i in xrange(0, 0xFF, 0x20):
+            frame = self.query_block(0x01, i)
+            for j, byte in enumerate(frame.data):
+                for k in xrange(8):
+                    pid = i + j*8 + k + 1
+                    sup = byte & (0x80>>k)
+                    if sup:
+                        supported.append(pid)
+            # next PID supported message is not supported
+            if not (byte & 1):
+                break
+
+        return supported
+
+
+    def get_vin(self):
+        # request vehicle info (VIN)
+
+        # supported_frame = self.query_block(0x09, 0x00)
+        # if not frame.data[0] & 0x3:
+        #     print 'VIN not supported'
+        #     print map(hex, frame.data)
+
+        num_frames = self.query_block(0x09, 0x01).data[0]
+
+        self.query(0x09, 0x02)
+        vin_frames = [self.read_block(0x09 & 0x40, 0x02) for i in xrange(num_frames)]
+
+        print vin_frames
+        vin_frames.sort(lambda x:x.data[0])
+        vin = map(chr, [i.data[1:] for i in vin_frames])
+
+        return vin
+
+
     def init(self):
         # request all 'PID Supported' modes
         log.info('OBD2 Init')
 
         pid_mask = [0] * 0xE0
-        for i in xrange(0, 0xE0, 0x20):
-            try:
-                frame = self.query_block(0x01, i)
-                for j,b in enumerate(frame.data):
-                    # print j
-                    for k in xrange(8):
-                        pid_mask[i + 8*j + k] = b & (1<<k)
-            except TimeoutError:
-                print 'Timeout'
+        for i in xrange(0, 0xFF, 0x20):
+            frame = self.query_block(0x01, i)
+            for j,b in enumerate(frame.data):
+                for k in xrange(8):
+                    pid_mask[i + 8*j + k + 1] = b & (1<<k)
+            if not frame.data[4] &
 
-        self.supported_pids = [i for i,s in enumerate(pid_mask) if s]
 
-        # print pid_mask
-        # print self.supported_pids
+        self.supported_pids = self.get_supported_pids()
+        print self.supported_pids
 
         log_msg = []
         for p in self.supported_pids:
@@ -147,22 +182,8 @@ class OBD2(object):
             except TimeoutError:
                 print 'Error', p
 
-        # equest vehicle info (VIN)
-        supported_frame = self.query_block(0x09, 0x00)
-        if not frame.data[0] & 0x3:
-            print 'VIN not supported'
-            print map(hex, frame.data)
 
-        try:
-            num_frames = self.query_block(0x09, 0x01).data[0]
-        except TimeoutError:
-            print 'num frames not supported'
-            num_frames = 1
-        self.query(0x09, 0x02)
-        vin_frames = [self.read_block(0x09 & 0x40, 0x02) for i in xrange(num_frames)]
-        print vin_frames
-        vin_frames.sort(lambda x:x.data[0])
-        vin = map(chr, [i.data[1:] for i in vin_frames])
+        vin = self.get_vin()
         log.info('Vehicle VIN: %s' % vin)
 
 

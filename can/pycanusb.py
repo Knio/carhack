@@ -637,11 +637,17 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                         for i in xrange(frame.len):
                             msg.data[i] = frame.data[i]
                         res = __write(msg)
-                        adapter.flush(FLUSH_WAIT)
-                        time.sleep(0.1)
-                        log.info('Write: %s (res: %s)' % (frame, res))
+
+                        # Do we need to do this?
+                        res_f = adapter.flush(FLUSH_WAIT)
+
+                        log.info('Write: %s (res: %s)' % (frame, (res, res_f)))
+
                         if res is not True:
                             raise IOError(res, "Failed to write to adapter")
+
+                        if not res_f > 0:
+                            raise IOError(res_f, "Failed to flush adapter"
 
                     adapter.write = write
 
