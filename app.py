@@ -27,7 +27,7 @@ class MainHandler(tornado.web.RequestHandler):
 class CarApp(object):
     def __init__(self):
         log.info('starting app')
-        self.can = can.CAN(logging=False, simulate=False)
+        self.can = can.CAN(logging=True, simulate=False)
         # self.cam = camera.Webcam(self)
         # self.cam.start()
         self.obd2 = can.OBD2(self.can)
@@ -50,8 +50,11 @@ class CarApp(object):
         self.http_server.listen(8001)
 
         # block forever
-        ioloop.start()
-
+        try:
+            ioloop.start()
+        except KeyboardInterrupt:
+            print 'Closing'
+            self.can.close()
 
 if __name__ == '__main__':
     app = CarApp()

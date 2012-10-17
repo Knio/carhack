@@ -120,7 +120,7 @@ function can() {
     ws.onopen = function(e) {
         dom.h3('Open');
         // ws.send(pyy.utils.json({ids:[0x421, 0x180, 0x160]}));
-        ws.send(pyy.utils.json({ids:[0x551, 0x5c5]}));
+        ws.send(pyy.utils.json({ids:[2]}));
     };
     ws.onmessage = function(e) {
         // pyy('#frames').pre(e.data);
@@ -136,7 +136,7 @@ function can() {
             frame_delay -= delay;
             delay = 0;
         }
-
+        delay = 0;
         var schedule = new Date() - 0 + delay;
         frames.push([schedule, f]);
 

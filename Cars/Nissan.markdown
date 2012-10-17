@@ -67,6 +67,14 @@ X = 124: +17
 
 ?????
 
+
+* `A` - Steering wheel (wheels?) position lo
+* `B` - Steering wheel (wheels?) position hi
+    * 227 (full lock left) to 18 (full lock right)
+
+C, D - Power steering pump status?
+
+
 ID 160 - Unknown
 ----------------
 
@@ -122,7 +130,8 @@ where X counts up from 48 to 63 and repeats
 
     (A, B, C, D, E, F, G, H)
 
-* `A`, `B` - 16bit integer
+* `A`, `B` Engine RPM.
+    * Same as 1F9 C,D
 * `F` - Throttle pedal postion, % (F/255 * 100)
 
 ID 182 - Unknown
@@ -142,6 +151,11 @@ Sends every 10ms:
 where X counts up from 32 to 47 and repeats
 
 
+Fuel??
+
+H - higher when engine acellerating, cuts out when lifting
+B - goes high when lifting
+
 
 ID 1F9 - Unknown
 ----------------
@@ -151,6 +165,10 @@ When ignition goes from ACC to ON:
     (0, 0, 0, 0, 0, 0, 0, 128) - (repeat every 10ms)
 
 
+ON:
+
+* C, D - Engine RPM
+    (21, 74) = idle
 
 ID 6E2 - Unknown
 ----------------
@@ -180,6 +198,15 @@ ID 216 - Unknown
 When IGN in ACC:
 
     (64, 36) - (repeat)
+
+
+IGN ON:
+
+    (166, 100)
+
+* `A`
+    * 100 - CLutch engaged
+    * 108 - CLutch *fully* pressed
 
 
 IGN ACC -> ON:
@@ -314,6 +341,9 @@ IGN ON:
     (0, 0, 0, 0, 0, 76, 64, 2) (repeat * 15)
     (0, 0, 0, 0, 0, 12, 64, 2) (repeat)
 
+* `H` - Clutch pedal
+    * 2 - Engaged
+    * 6 - *fully* pressed
 
 
 ID 354 - Unknown
@@ -341,6 +371,9 @@ IGN ON:
     (0, 0, 0, 0, 0, 24, 4, 0)
     (repeat all)
 
+* `E` - TCS Status
+    * 0 - On
+    * 64 - Off
 
 
 ID 355 - Unknown
@@ -470,6 +503,14 @@ IGN ON:
 
 * `A` - Sensor data (temp?)
 * `B` - Counts up from 0 to 255 (only when engine running)
+    * Counts faster at higher RPMs
+
+* `E`
+    * 255 - Cruise control master off
+    * 254 - Cruise control master on
+* `F` 
+    * 2 - Cruise control master off
+    * 82 - Cruise control master on
 
 ID 580 - Unknown
 ----------------
@@ -490,6 +531,9 @@ IGN ON:
     (0, 0, 64, 14, 70)
 
 
+* `A, B` - Engine RPM
+    * (0, 130) = idle (~600rpm)
+
 ID 5C5 - Unknown
 ----------------
 
@@ -505,6 +549,9 @@ IGN ON:
     (68, 0, 76, 156, 0, 12, 0, 127)
 
 
+* `A` - Parking Brake
+    * 68 - On
+    * 64 - Off
 
 ID 60D - Body Control Module
 ----------------------------
