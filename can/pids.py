@@ -407,6 +407,9 @@ PIDS = [
 
     (0x4F, 4, 'Maximum value for equivalence ratio, oxygen sensor voltage, oxygen sensor current, and intake manifold absolute pressure (lambda, V, mA, kPa)',
         lambda A,B,C,D: (A, B, C, D*10)),
+        # TODO:
+        # This changes the conversion formulas for other PIDs
+        # Complicated.
 
     # (0x50, 4, 'Maximum value for air flow rate from mass air flow sensor',     '0',     '2550',     'g/s',     'A*10, B, C, and D are reserved for future use'),
 
