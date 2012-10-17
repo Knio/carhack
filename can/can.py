@@ -18,6 +18,7 @@ class CAN(object):
         self.subscriptions = {}
         self.last_frame = {}
 
+        self.log = None
         if logging:
             import canlog
             fname = 'logs/can/canlog.%s.log' \
@@ -25,15 +26,14 @@ class CAN(object):
             self.log = canlog.CANLog(fname)
             self.subscribe(self.log)
 
-        tornado.ioloop.PeriodicCallback(self.status, 1000).start()
+        tornado.ioloop.PeriodicCallback(self.status, 5000).start()
 
 
     def status(self):
         s = self.adapter.status()
         if s != 0:
             log.info(self.adapter.statusText(s))
-        # TODO if status is bad, reconnect?
-
+        # TODO if status is bad, reconnect
 
     def simulate(self, frames):
         import threading
@@ -78,6 +78,10 @@ class CAN(object):
                     continue
                 self.call_callback(callback, frame)
 
+    # def interactive(self):
+    #     import msvcrt
+    #     while 1:
+    #         c = getch()
 
     def subscribe(self, callback, ids=None, suppress_duplicates=False):
         if not ids:
@@ -93,12 +97,10 @@ class CAN(object):
                 if last:
                     self.call_calback(callback, last)
 
-
     def unsubscribe(self, callback):
         ids, suppress_duplicates = self.subscriptions.pop(callback)
         for id in ids:
             self.listeners[id].remove((callback, suppress_duplicates))
-
 
     def call_callback(self, callback, *args, **kwargs):
         try:
@@ -107,6 +109,9 @@ class CAN(object):
             import traceback
             traceback.print_exc()
 
+    def close(self):
+        if self.log:
+            self.log.close()
 
 if __name__ == '__main__':
     can = CAN()

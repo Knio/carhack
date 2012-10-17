@@ -31,8 +31,8 @@ PIDS = [
         lambda A: (A*100/255.)),
         # LOAD_PCT = [current airflow] / [(peak airflow at WOT@STP as a function of rpm) * (BARO/29.92) * SQRT(298/(AAT+273))]
         # Where:
-        # - STP = Standard Temperature and Pressure = 25 °C, 29.92 in Hg BARO, SQRT = square root,
-        # - WOT = wide open throttle, AAT = Ambient Air Temperature and is in °C
+        # - STP = Standard Temperature and Pressure = 25 C, 29.92 in Hg BARO, SQRT = square root,
+        # - WOT = wide open throttle, AAT = Ambient Air Temperature and is in C
         #
         # Characteristics of LOAD_PCT are:
         # - Reaches 100% at WOT at any altitude, temperature or rpm for both naturally aspirated and boosted engines.
@@ -218,8 +218,8 @@ PIDS = [
         lambda A:(A)),
         # A warm-up is defined in the OBD regulations to be sufficient vehicle
         # operation such that coolant temperature rises by at
-        # least 22 °C (40 °F) from engine starting and reaches
-        # a minimum temperature of 70 °C (160 °F) (60 °C (140 °F) for diesels)
+        # least 22 C (40 F) from engine starting and reaches
+        # a minimum temperature of 70 C (160 F) (60 C (140 F) for diesels)
 
     (0x31, 2, 'Distance traveled since codes cleared (km)',
         short),
@@ -341,14 +341,14 @@ PIDS = [
         # - LOAD_ABS = [air mass (g)/intake stroke] / [maximum air mass (g)/intake stroke at WOT@STP at 100% volumetric efficiency] * 100%.
         #
         # Where:
-        # - STP = Standard Temperature and Pressure = 25 °C, 29.92 in Hg (101.3 kPa) BARO, WOT = wide open throttle.
+        # - STP = Standard Temperature and Pressure = 25 C, 29.92 in Hg (101.3 kPa) BARO, WOT = wide open throttle.
         #
         # The quantity (maximum air mass (g)/intake stroke at WOT@STP at 100% volumetric efficiency) is a constant for a given cylinder sw ept
         # volume. The constant is 1.184 (g/litre 3) * cylinder displacement (litre 3/intake stroke) based on air density
         # at STP.
         #
         # Characteristics of LOAD_ABS are:
-        # - Ranges from 0 to approximately 0.95 for naturally aspirated engines, 0 – 4 for boosted engines,
+        # - Ranges from 0 to approximately 0.95 for naturally aspirated engines, 0 - 4 for boosted engines,
         # - Linearly correlated with engine indicated and brake torque,
         # - Often used to schedule spark and EGR rates,
         # - Peak value of LOAD_ABS correlates with volumetric efficiency at WOT.,
