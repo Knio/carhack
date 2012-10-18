@@ -7,7 +7,7 @@ var main = pyy('#main')
 
 function Frame(data) {
     if (typeof data === 'string') {
-        data = pyy.utils.json(data);
+        data = U.json(data);
     }
     this.timestamp  = data.timestamp;
     this.id         = data.id;
@@ -19,12 +19,17 @@ function Frame(data) {
 
 function debug_box(id) {
 
+    var active = false;
     var graph = new Graph();
     var bytes = [];
     var _b;
-    this.dom = pyy('#data').div(
+    this.dom = H.div(
         table(tr(
-            td(h2('ID'+id.toString(16))),
+            td(h2(a('ID'+id.toString(16), {
+                href:'#',
+                onclick:this.toggle,
+                context:this
+            }))),
             _b = td(),
             td(graph.canvas)
         ))
@@ -54,14 +59,115 @@ function debug_box(id) {
     };
 
     this.draw = function() {
-        graph.draw();
+        if (active) {
+            graph.draw();
+        }
     };
+
+
+    this.toggle = function() {
+        if (active) {
+            this.enable();
+        } else {
+            this.disable();
+        }
+    };
+    this.enable = function() {
+        active = true;
+        this.dom.className = '';
+        can.subscribe(this.read, this);
+    };
+    this.disable = function() {
+        active = false;
+        this.dom.className = 'disabled';
+        can.unsubscribe(this.read, this);
+    };
+
+    this.enable();
+}
+
+var NISSAN_IDS = [
+    0x002, 0x160, 0x180, 0x182, 0x1F9, 0x215, 0x216, 0x245, 0x280, 0x284,
+    0x285, 0x292, 0x2DE, 0x342, 0x351, 0x354, 0x355, 0x358, 0x35D, 0x385,
+    0x421, 0x512, 0x54C, 0x551, 0x580, 0x5C5, 0x60D, 0x625, 0x6E2];
+
+
+function keys(obj) {
+    var keys = [];
+    U.foreach(obj, function(v, k) {
+        keys.push(k);
+    });
+    return keys;
+};
+
+function values(obj) {
+    var values = [];
+    U.foreach(obj, function(v, k) {
+        values.push(v);
+    });
+    return values;
+};
+
+function event() {
+    var listeners = []
+
+    var fire = function() {
+        var args = U.args(arguments);
+        U.foreach(listeners, function(sub) {
+            var a = sub.args.concat(args);
+            sub.apply(sub.context, a);
+        });
+    }
+
+    fire.subscribe = function(callback, context) {
+        listeners.push({
+            callback: callback,
+            context: context,
+            args: U.args(arguments, 2)
+        });
+    };
+
+    fire.unsubscribe = function(callback, context) {
+        listeners = U.remove(listeners, function(sub)) {
+            return (sub.callback == callback) &&
+                (sub.context == context);
+        }
+    };
+
+    fire.length = function() {
+        return listeners.length;
+    }
+
+    return fire;
 }
 
 function can() {
     var dom = pyy('#frames');
     var ws = new WebSocket(wsurl + 'can');
     var divs = {};
+    var events = {};
+    var ids = [];
+    var data = pyy('#data')[0];
+
+
+
+    this.subscribe = function(id, callback, context) {
+        if (!this.events[id]) {
+            this.events[id] = event();
+            this.ws.send(U.json({ids: keys(this.events)}));
+        }
+        this.events[i].subscribe(callback, context);
+    };
+
+    this.unsubscribe = function(id, callback, context) {
+        var e = this.events[id];
+        e.unsubscribe(callback, context);
+        if (e.length() == 0) {
+            delete this.events[id];
+            this.ws.send(U.json({ids: keys(this.events)}));
+        }
+    };
+
     var frame_delay = null;
 
     // try to render at 50Hz
@@ -105,22 +211,20 @@ function can() {
         }
     }, 10);
 
-    var get_div = function(id) {
-        if (divs[id] === undefined) {
-            divs[id] = new debug_box(id);
-        }
-        return divs[id];
-    };
-
     var process = function(frame) {
-        var d = get_div(frame.id);
-        d.read(frame);
+        var e = this.events[frame.id];
+        if (e === undefined) { return; }
+        e(frame);
     }
 
     ws.onopen = function(e) {
         dom.h3('Open');
-        // ws.send(pyy.utils.json({ids:[0x421, 0x180, 0x160]}));
-        ws.send(pyy.utils.json({ids:[2]}));
+
+        U.foreach(NISSAN_IDS, function(id) {
+            divs[id] = new debug_box(id);
+            data.appendChild(divs[id].dom);
+        }, this);
+
     };
     ws.onmessage = function(e) {
         // pyy('#frames').pre(e.data);

@@ -134,6 +134,8 @@ where X counts up from 48 to 63 and repeats
     * Same as 1F9 C,D
 * `F` - Throttle pedal postion, % (F/255 * 100)
 
+
+
 ID 182 - Unknown
 ----------------
 
@@ -169,6 +171,8 @@ ON:
 
 * C, D - Engine RPM
     (21, 74) = idle
+
+
 
 ID 6E2 - Unknown
 ----------------
@@ -508,7 +512,7 @@ IGN ON:
 * `E`
     * 255 - Cruise control master off
     * 254 - Cruise control master on
-* `F` 
+* `F`
     * 2 - Cruise control master off
     * 82 - Cruise control master on
 

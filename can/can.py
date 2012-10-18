@@ -84,7 +84,7 @@ class CAN(object):
     #         c = getch()
 
     def subscribe(self, callback, ids=None, suppress_duplicates=False):
-        if not ids:
+        if ids is None:
             ids = [None]
 
         self.subscriptions[callback] = (ids, suppress_duplicates)

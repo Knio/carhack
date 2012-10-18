@@ -34,6 +34,7 @@ h1, h2, h3, h4, h5 {
 #data > div td:nth-child(1) {
 
 }
+
 #data > div td:nth-child(2) {
     vertical-align: top;
     text-align: right;
@@ -41,4 +42,11 @@ h1, h2, h3, h4, h5 {
 }
 #data > div td:nth-child(3) {
     vertical-align: top;
+}
+
+#data > div.disabled td:nth-child(2) {
+    display: none;
+}
+#data > div.disabled td:nth-child(3) {
+    display: none;
 }
