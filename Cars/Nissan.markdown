@@ -192,6 +192,9 @@ Sends every 20ms:
 
     (255, 240, 255, 0, 255, 255)
 
+*B 
+    * 240 - AC LED off
+    * 248 - AC LED on
 
 
 ID 216 - Unknown
@@ -259,6 +262,8 @@ IGN ON:
 * `X` - varies randomly from 13 to 17
 * `Y` - varies randomly from 154 to 161
 
+
+* E, F - vehicle speed
 
 
 ID 284 - Unknown
@@ -379,6 +384,12 @@ IGN ON:
     * 0 - On
     * 64 - Off
 
+* G
+    * 4 - brake off
+    * 20 - brake pedal pressed (little bit)
+
+A,B - Speed
+
 
 ID 355 - Unknown
 ----------------
@@ -393,6 +404,8 @@ IGN ON:
 
     (0, 0, 0, 0, 32, 0, 96)
 
+A,B - Speed
+C,D - Speed
 
 
 ID 358 - Unknown
@@ -431,6 +444,17 @@ IGN ON:
     (128, 3, 0, 0, 0, 0, 0, 0)
 
 
+C
+    * 0 
+    * 64 - wiper pulse
+    * 192 - wiper 1 pulse (up)
+    * 192 - continuous wiper
+    * 224 - fast continuous wiper
+
+E
+    * 16 - car stopped
+    * 64 - car moving
+    * ?? - brake pressed
 
 ID 385 - Unknown
 ----------------
