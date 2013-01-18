@@ -1,5 +1,6 @@
 
 var U = pyy.utils;
+var H = pyy.html.tags;
 
 ws = new WebSocket(wsurl + 'echo');
 
@@ -20,20 +21,40 @@ function Frame(data) {
 function debug_box(id) {
 
     var active = false;
+    this.toggle = function() {
+        if (!active) {
+            this.enable();
+        } else {
+            this.disable();
+        }
+    };
+    this.enable = function() {
+        active = true;
+        this.dom.className = '';
+        can.subscribe(id, this.read, this);
+    };
+    this.disable = function() {
+        active = false;
+        this.dom.className = 'disabled';
+        can.unsubscribe(id, this.read, this);
+    };
+
     var graph = new Graph();
     var bytes = [];
     var _b;
-    this.dom = H.div(
+    var that = this;
+    this.dom = div(
         table(tr(
             td(h2(a('ID'+id.toString(16), {
                 href:'#',
-                onclick:this.toggle,
+                onclick:function(e) {that.toggle(); e.preventDefault(); return false; },
                 context:this
             }))),
             _b = td(),
             td(graph.canvas)
         ))
     );
+    this.dom.className = 'disabled';
 
     var data = [];
 
@@ -65,25 +86,8 @@ function debug_box(id) {
     };
 
 
-    this.toggle = function() {
-        if (active) {
-            this.enable();
-        } else {
-            this.disable();
-        }
-    };
-    this.enable = function() {
-        active = true;
-        this.dom.className = '';
-        can.subscribe(this.read, this);
-    };
-    this.disable = function() {
-        active = false;
-        this.dom.className = 'disabled';
-        can.unsubscribe(this.read, this);
-    };
 
-    this.enable();
+    // this.enable();
 }
 
 var NISSAN_IDS = [
@@ -92,7 +96,56 @@ var NISSAN_IDS = [
     0x421, 0x512, 0x54C, 0x551, 0x580, 0x5C5, 0x60D, 0x625, 0x6E2];
 
 
-function can() {
+function keys(obj) {
+    var keys = [];
+    U.foreach(obj, function(v, k) {
+        keys.push(k);
+    });
+    return keys;
+};
+
+function values(obj) {
+    var values = [];
+    U.foreach(obj, function(v, k) {
+        values.push(v);
+    });
+    return values;
+};
+
+function event() {
+    var listeners = []
+
+    var fire = function() {
+        var args = U.args(arguments);
+        U.foreach(listeners, function(sub) {
+            var a = sub.args.concat(args);
+            sub.callback.apply(sub.context, a);
+        });
+    };
+
+    fire.subscribe = function(callback, context) {
+        listeners.push({
+            callback: callback,
+            context: context,
+            args: U.args(arguments, 2)
+        });
+    };
+
+    fire.unsubscribe = function(callback, context) {
+        listeners = U.remove(listeners, function(sub) {
+            return (sub.callback == callback) &&
+                (sub.context == context);
+        });
+    };
+
+    fire.len = function() {
+        return listeners.length;
+    }
+
+    return fire;
+}
+
+function CAN() {
     var dom = pyy('#frames');
     var ws = new WebSocket(wsurl + 'can');
     var divs = {};
@@ -103,19 +156,19 @@ function can() {
 
 
     this.subscribe = function(id, callback, context) {
-        if (!this.events[id]) {
-            this.events[id] = U.event();
-            this.ws.send(U.json({ids: U.keys(this.events)}));
+        if (!events[id]) {
+            events[id] = event();
+            ws.send(U.json({ids: U.map(keys(events), function(i) { return i-0; })}));
         }
-        this.events[i].subscribe(callback, context);
+        events[id].subscribe(callback, context);
     };
 
     this.unsubscribe = function(id, callback, context) {
-        var e = this.events[id];
+        var e = events[id];
         e.unsubscribe(callback, context);
-        if (e.length() == 0) {
-            delete this.events[id];
-            this.ws.send(U.json({ids: U.keys(this.events)}));
+        if (e.len() == 0) {
+            delete events[id];
+            ws.send(U.json({ids: U.map(keys(events), function(i) { return i-0; })}));
         }
     };
 
@@ -163,7 +216,7 @@ function can() {
     }, 10);
 
     var process = function(frame) {
-        var e = this.events[frame.id];
+        var e = events[frame.id];
         if (e === undefined) { return; }
         e(frame);
     }
@@ -205,7 +258,7 @@ function can() {
     dom.h3('Init');
 };
 
-var c = new can()
+window.can = new CAN()
 
 setInterval(function() {
     // pyy('#cam').clear().img({src:'/cam.jpg', width:'640', height:'480'});
