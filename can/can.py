@@ -26,7 +26,8 @@ class CAN(object):
             self.log = canlog.CANLog(fname)
             self.subscribe(self.log)
 
-        tornado.ioloop.PeriodicCallback(self.status, 5000).start()
+        if not simulate:
+            tornado.ioloop.PeriodicCallback(self.status, 5000).start()
 
 
     def status(self):
