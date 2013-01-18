@@ -14,7 +14,7 @@ log.info("test")
 import can
 import web
 import camera
-
+import data
 
 class MainHandler(tornado.web.RequestHandler):
     def initialize(self, app):
@@ -27,15 +27,29 @@ class MainHandler(tornado.web.RequestHandler):
 class CarApp(object):
     def __init__(self):
         log.info('starting app')
+        self.start = time.time()
+
+        self.basename = 'logs/counters/%s/' % time.strftime('%Y-%m-%d.%H.%M.%S')
+        self.counters = {}
+
         self.can = can.CAN(logging=True, simulate=False)
+
         # self.cam = camera.Webcam(self)
         # self.cam.start()
-        self.obd2 = can.OBD2(self.can)
+
+        self.obd2 = can.OBD2(self, self.can)
+
+        # self.car =
 
         # def read(frame):
         #     print frame
         # self.can.subscribe(read)
 
+    def add_counter(self, name, format, description):
+        counter = data.TimeSeries(name, format, self.basename)
+        counter.description = description
+        self.counters[name] = counter
+        return counter
 
     def run(self):
         self.tornadoapp = tornado.web.Application([

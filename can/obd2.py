@@ -29,7 +29,8 @@ class OBD2Frame(object):
 
 
 class OBD2(object):
-    def __init__(self, can):
+    def __init__(self, app, can):
+        self.app = app
         self.can = can
         self.can.subscribe(self.read, ids=OBD2_IDS)
 
@@ -101,6 +102,9 @@ class OBD2(object):
         # make table for each
         supported = [0]
         for i in xrange(0, 0xFF, 0x20):
+            if not supported[-1] == i:
+                break
+
             frame = self.query_block(0x01, i)
             for j, byte in enumerate(frame.data):
                 for k in xrange(8):
@@ -108,9 +112,6 @@ class OBD2(object):
                     sup = byte & (0x80>>k)
                     if sup:
                         supported.append(pid)
-            # next PID supported message is not supported
-            if not (byte & 1):
-                break
 
         return supported
 
@@ -165,11 +166,27 @@ class OBD2(object):
                 print 'Error', p
 
 
-        vin = self.get_vin()
-        log.info('Vehicle VIN: %s' % vin)
-
+        # vin = self.get_vin()
+        # log.info('Vehicle VIN: %s' % vin)
 
         # - dump all DTC error codes / one time data
         # - start loop to request supported mode 0x01 values
 
+
+    def start_log(self, interval):
+
+        counters = {}
+        for pid in self.supported_pids:
+            p = PID[pid]
+            name = 'obd.%02x' % pid
+            counters[pid] = self.app.add_counter()
+
+
+        def query():
+            for pid in self.supported_pids:
+
+
+
+
+        ioloop.PeriodicCallback(query, interval * 1000)
 

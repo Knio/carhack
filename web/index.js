@@ -92,55 +92,6 @@ var NISSAN_IDS = [
     0x421, 0x512, 0x54C, 0x551, 0x580, 0x5C5, 0x60D, 0x625, 0x6E2];
 
 
-function keys(obj) {
-    var keys = [];
-    U.foreach(obj, function(v, k) {
-        keys.push(k);
-    });
-    return keys;
-};
-
-function values(obj) {
-    var values = [];
-    U.foreach(obj, function(v, k) {
-        values.push(v);
-    });
-    return values;
-};
-
-function event() {
-    var listeners = []
-
-    var fire = function() {
-        var args = U.args(arguments);
-        U.foreach(listeners, function(sub) {
-            var a = sub.args.concat(args);
-            sub.apply(sub.context, a);
-        });
-    }
-
-    fire.subscribe = function(callback, context) {
-        listeners.push({
-            callback: callback,
-            context: context,
-            args: U.args(arguments, 2)
-        });
-    };
-
-    fire.unsubscribe = function(callback, context) {
-        listeners = U.remove(listeners, function(sub)) {
-            return (sub.callback == callback) &&
-                (sub.context == context);
-        }
-    };
-
-    fire.length = function() {
-        return listeners.length;
-    }
-
-    return fire;
-}
-
 function can() {
     var dom = pyy('#frames');
     var ws = new WebSocket(wsurl + 'can');
@@ -153,8 +104,8 @@ function can() {
 
     this.subscribe = function(id, callback, context) {
         if (!this.events[id]) {
-            this.events[id] = event();
-            this.ws.send(U.json({ids: keys(this.events)}));
+            this.events[id] = U.event();
+            this.ws.send(U.json({ids: U.keys(this.events)}));
         }
         this.events[i].subscribe(callback, context);
     };
@@ -164,7 +115,7 @@ function can() {
         e.unsubscribe(callback, context);
         if (e.length() == 0) {
             delete this.events[id];
-            this.ws.send(U.json({ids: keys(this.events)}));
+            this.ws.send(U.json({ids: U.keys(this.events)}));
         }
     };
 
