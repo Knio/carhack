@@ -73,6 +73,6 @@ class CarApp(object):
 if __name__ == '__main__':
     app = CarApp()
 
-    # app.can.simulate(can.CANLog('/home/tom/temp/canlog.2012-10-11.15.19.02.log'))
+    app.can.simulate(can.CANLog('canlog.2012-10-08.19.13.11.log'))
 
     app.run()
