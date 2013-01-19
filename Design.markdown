@@ -37,7 +37,13 @@ Carhack Design
 
 
 * Two modes of operation:
-    - live mode:
+    - live mode: show real-time data from the car as it is bring driven
+    - playback mode: view data from previous trips
+
+    Each trip should be independant and have it's own set of data series.
+    The app should be able to be run in playback mode only (for running on a 
+    desktop computer)
+
 
 
 
