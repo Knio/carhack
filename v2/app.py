@@ -37,6 +37,7 @@ class CarApp(Singleton):
     self.trips = {}
 
   def start_live_trip(self):
+    self.live_trip = trip.LiveTrip()
     raise NotImplementedError
 
   def start_web_server(self):
@@ -46,7 +47,7 @@ class CarApp(Singleton):
   def load_trips(self):
     for tid in os.listdir(self.data_path):
       path = os.path.join(self.data_path, tid)
-      trip = LoggedTrip(self, path, tid)
+      trip = trip.LoggedTrip(self, path, tid)
       self.trips[tid] = trip
 
   def run(self):
@@ -73,6 +74,8 @@ class CarApp(Singleton):
 
 
 app = CarApp()
+
+import trip
 
 if __name__ == '__main__':
     CarApp().run()

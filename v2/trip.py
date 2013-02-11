@@ -7,7 +7,7 @@ class Publisher(object):
   def __init__(self):
     self.subscribers = defaultdict(list)
 
-  def subscriber(self, name, subscriber):
+  def subscribe(self, name, subscriber):
     self.subscribers[name].append(subscriber)
 
   def fire(self, name, value):
@@ -74,6 +74,12 @@ class Livetrip(Trip, Publisher):
     sensors = app.config.items('sensors')
     log.info(repr(sensors))
 
+
+  def publish(self, name, value):
+    if not name in self.series:
+      pass
+
+    raise NotImplementedError
 
 import heapq
 class LogReader(object):

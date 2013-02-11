@@ -499,7 +499,6 @@ class CanUSB(object):
 
 import time
 import logging
-from frame import Frame
 
 def open(name=None, bitrate=None, flags=None, callback=None):
     '''
@@ -535,20 +534,20 @@ def open(name=None, bitrate=None, flags=None, callback=None):
     if name is None:
         adapters = getAdapters()
         if not adapters:
-            raise Exception('No adapters found')
+            raise Exception('No CANUSB adapters found')
     else:
         adapters = [name]
 
     if bitrate is None:
         bitrates = [
-            "10"
-            "20",
-            "50",
-            "100",
-            "250",
-            "500",
-            "800",
-            "1000",
+            '10'
+            '20',
+            '50',
+            '100',
+            '250',
+            '500',
+            '800',
+            '1000',
         ]
     else:
         bitrates = [bitrate]
@@ -664,7 +663,6 @@ def open(name=None, bitrate=None, flags=None, callback=None):
 
 
 def main():
-
     frames = []
     def read(frame):
         print frame
