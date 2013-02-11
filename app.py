@@ -6,8 +6,8 @@ import tornado.web
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
-log = logging.getLogger()
 logging.basicConfig(level=0)
+log = logging.getLogger('carapp')
 
 log.info("test")
 
@@ -65,9 +65,10 @@ class CarApp(object):
 
         # block forever
         try:
+            log.info('Starting mainloop. Press ^C to exit')
             ioloop.start()
         except KeyboardInterrupt:
-            print 'Closing'
+            log.info('Exiting')
             self.can.close()
 
 if __name__ == '__main__':

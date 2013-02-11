@@ -520,6 +520,7 @@ def open(name=None, bitrate=None, flags=None, callback=None):
     callback
         python function to call when a frame arrives.
         if not provided, use adapter.read() to get frames
+        NOTE: the callback will be executed in a different thread
 
 
     returns
