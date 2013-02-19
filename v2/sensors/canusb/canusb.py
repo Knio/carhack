@@ -1,4 +1,7 @@
-import trip
+import tornado.ioloop
+
+ioloop = tornado.ioloop.IOLoop.instance()
+
 
 class CanUsb(Sensor):
     def __init__(self, name=None, bitrate=None, flags=None):
@@ -12,17 +15,16 @@ class CanUsb(Sensor):
             frame.timestamp, frame))
 
 
-import struct
+import pycanusb.Frame
 class CanUSBLog(log.TimeSeriesStruct):
-    handles = 'can.[0-9a-f]{3}$'
-
-    format = '!dHBB8B'
-    size = struct.calcsize(format)
+    name_pattern = 'can.[0-9a-f]{3}$'
+    item_format = pycanusb.Frame.format
+    item_size = struct.calcsize(item_format)
 
     def from_object(frame):
         return frame.tostring()
 
     def from_string(string):
-        return Frame
+        return Frame(string)
 
 

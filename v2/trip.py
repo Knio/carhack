@@ -1,7 +1,7 @@
+import os
 from collections import defaultdict
 
-from app import app, log
-
+import loggers
 
 class Publisher(object):
   def __init__(self):
@@ -10,26 +10,28 @@ class Publisher(object):
   def subscribe(self, name, subscriber):
     self.subscribers[name].append(subscriber)
 
-  def fire(self, name, value):
-    for subscriber in self.subscribers[name]
-      subscriber(value)
+  def fire(self, name, timestamp, value):
+    for subscriber in self.subscribers[name]:
+      subscriber(timestamp, value)
 
     for subscriber in self.subscribers[None]:
-      subscriber(value)
+      subscriber(timestamp, value)
 
 
 class Trip(object):
-  def __init__(self, path, tid, name):
+  def __init__(self, tid, path, name=None):
+    super(Trip, self).__init__()
     self.tid = tid
-    self.name = name
+    self.path = path
+    self.name = name or tid
+
     self.ts_start = 0
     self.ts_end = 0
 
-    self.sensors = []
-    self.processors = []
+    self.sensors = {}
+    self.processors = {}
 
-    self.series = []
-    self.path = path
+    self.series = {}
 
   def get_sensors(self):
     pass
@@ -39,9 +41,9 @@ class Trip(object):
 
 
 class LoggedTrip(Trip):
-  def __init__(self,  path, tid):
+  def __init__(self, tid, path):
     name = tid
-    super(LoggedTrip, self).__init__(path, tid, name)
+    super(LoggedTrip, self).__init__(tid, path)
     self.load_logs()
 
   def load_logs(self):
@@ -65,21 +67,37 @@ class LoggedTrip(Trip):
     sensors = os.listdir(self.j('secondary'))
 
 
-class Livetrip(Trip, Publisher):
-  def __init__(self,  path, tid):
-    super(Livetrip, self).__init__( path, tid, 'Active Trip')
+class LiveTrip(Trip, Publisher):
+  def __init__(self, tid, path):
+    super(LiveTrip, self).__init__(tid, path, 'Current trip')
+    log.info('Initializing current trip %s' % tid)
+    if not os.path.isdir(path):
+      os.mkdir(path)
 
+    self.init_sensors()
 
-  def get_sensors(self):
-    sensors = app.config.items('sensors')
-    log.info(repr(sensors))
+  def init_sensors(self):
+    sensor_names = app.config.items('sensors')
+    log.info(repr(sensor_names))
+    for sensor_name, value in sensor_names:
+      if not app.config.getboolean('sensors', sensor_name):
+        continue
+      self.init_sensor(sensor_name)
 
+  def init_sensor(self, name):
+      log.info('Loading sensor %s' % name)
+      sensors = __import__('sensors.%s' % name, globals(), level=0)
+      module = getattr(sensors, name)
+      sensor = module.sensor()
+      self.sensors[name] = sensor
 
-  def publish(self, name, value):
+  def publish(self, name, timestamp, value):
     if not name in self.series:
-      pass
-
-    raise NotImplementedError
+      series = loggers.TimeSeriesInterface.get_handler(name)()
+      series.open(self.j('%s.dat' % name))
+      self.series[name] = series
+    self.series[name].append(timestamp, value)
+    self.fire(name, timestamp, value)
 
 import heapq
 class LogReader(object):
@@ -108,5 +126,4 @@ class LogReader(object):
       heapq.heappush(self.next, (_d, _v, _i, l))
     return v
 
-
-
+from carapp import app, log

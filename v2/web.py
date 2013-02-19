@@ -1,12 +1,13 @@
 import json as _json
 
 import decorator
-
 from pyy.web.tornado_simple_server import *
 
-def init(_carhack):
-    global carhack
-    carhack = _carhack
+import page
+
+def init(_app):
+    global app
+    app = _app
     server.add_static_route('^/static/(.*)$', 'static')
 
 @decorator.decorator
@@ -18,18 +19,19 @@ def json(func, *args, **kwargs):
 
 @get('^/$')
 def index(request):
-    return 'Hello world'
+    return page.CarAppPage()
+
 
 @get('^/api/trips$')
 @json
 def trips(request):
-    return sorted([trip.name for trip in carhack.trips])
+    return sorted([dict(tid=tid, name=t.name) for tid,t in app.trips.items()])
 
 
 @get('^/api/trip/(\d[8])$')
 @json
 def get_trip(request, tid):
-    trip = carhack.trips[tid]
+    trip = app.trips[tid]
 
     return {
         # 'name':

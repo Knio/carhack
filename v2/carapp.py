@@ -37,9 +37,9 @@ class CarApp(Singleton):
     self.trips = {}
 
   def start_live_trip(self):
-    name = time.strftime('%Y-%m-%d_%H-%M-%S')
-    self.live_trip = trip.LiveTrip(name, os.path.join(self.data_path, name))
-    raise NotImplementedError
+    tid = time.strftime('%Y-%m-%d_%H-%M-%S')
+    self.live_trip = trip.LiveTrip(tid, os.path.join(self.data_path, tid))
+    self.trips[tid] = self.live_trip
 
   def start_web_server(self):
     web.init(self)
@@ -48,11 +48,11 @@ class CarApp(Singleton):
   def load_trips(self):
     for tid in os.listdir(self.data_path):
       path = os.path.join(self.data_path, tid)
-      trip = trip.LoggedTrip(self, path, tid)
-      self.trips[tid] = trip
+      logged_trip = trip.LoggedTrip(tid, path)
+      self.trips[tid] = logged_trip
 
   def run(self):
-    self.load_trips()
+    # self.load_trips()
 
     if self.config.getboolean('Carhack', 'record_data'):
       self.start_live_trip()
@@ -74,11 +74,6 @@ class CarApp(Singleton):
     pass
 
 
-
 app = CarApp()
-print 'app done'
+
 import trip
-
-if __name__ == '__main__':
-    CarApp().run()
-

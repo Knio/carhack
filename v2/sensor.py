@@ -1,9 +1,6 @@
 
-from app import app
+from carapp import app
 
 class Sensor(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def publish(self, name, timestamp, data):
-
+    def publish(self, name, timestamp, value):
+        app.live_trip.publish(name, timestamp, value)
