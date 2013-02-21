@@ -24,5 +24,5 @@ class TestSensor(sensor.Sensor):
     for value in self.iter():
       time.sleep(0.1)
       ioloop.add_callback(lambda:
-        self.publish('test', time.time(), value))
+        self.publish('random1', time.time(), value))
 

@@ -52,7 +52,7 @@ class CarApp(Singleton):
       self.trips[tid] = logged_trip
 
   def run(self):
-    # self.load_trips()
+    self.load_trips()
 
     if self.config.getboolean('Carhack', 'record_data'):
       self.start_live_trip()
@@ -71,7 +71,8 @@ class CarApp(Singleton):
         self.close()
 
   def close(self):
-    pass
+    if self.live_trip:
+      self.live_trip.close()
 
 
 app = CarApp()

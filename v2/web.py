@@ -3,6 +3,9 @@ import json as _json
 import decorator
 from pyy.web.tornado_simple_server import *
 
+
+server.add_static_route('^/static/(.*)$', 'web/static')
+
 import page
 
 def init(_app):
@@ -25,14 +28,25 @@ def index(request):
 @get('^/api/trips$')
 @json
 def trips(request):
-    return sorted([dict(tid=tid, name=t.name) for tid,t in app.trips.items()])
+    return [trip.to_json() for trip in app.trips.values()]
 
 
 @get('^/api/trip/(\d[8])$')
 @json
-def get_trip(request, tid):
+def get_series(request, tid):
     trip = app.trips[tid]
 
     return {
         # 'name':
     }
+
+
+@get('^/api/trip/([\d\-_]+)/(\w+)/range/(\d+\.\d+)/(\d+\.\d+)$')
+@json
+def get_range(self, tid, series_name, start_ts, end_ts):
+    trip = app.trips[tid]
+    series = trip.series[series_name]
+    start_ts = float(start_ts)
+    end_ts = float(end_ts)
+    data = series.get_range(start_ts, end_ts)
+    return data

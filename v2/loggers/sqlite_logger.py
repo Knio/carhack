@@ -7,6 +7,10 @@ import time_series
 class SQLiteTimeSeries(time_series.TimeSeriesInterface):
     name_pattern = '.*'
 
+    def __init__(self):
+        super(SQLiteTimeSeries, self).__init__()
+        self.conn = None
+
     def open(self, filename):
         exists = os.path.isfile(filename) and os.path.getsize(filename) != 0
         self.conn = sqlite3.connect(filename)
