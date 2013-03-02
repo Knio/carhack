@@ -111,8 +111,8 @@ U.mix(CarAppUi.prototype, {
   trips_loaded: function(trips) {
     H.empty(this.trip_select);
     trips = U.values(trips);
-    trips.sort(function(a,b) {
-      return a.ts_start < b.ts_start;
+    trips.sort(function(a, b) {
+      return b.ts_start - a.ts_start;
     });
     U.foreach(trips, function(trip) {
       var name = nice_date(trip.date_start);
@@ -139,29 +139,36 @@ U.mix(TripUI.prototype, {
   build_dom: function() {
     var t = this.trip;
     var dom = div(
+      {class:'trip'},
       h2(t.title),
       div(nice_date_and_duration(t.date_start, t.date_end)),
-      this.charts = div()
+      this.charts = div({class:'charts'})
     );
 
-    new plok.topaxis(this.charts, this.view);
+    var axis_container
+    this.charts.appendChild(div(
+      div(h3('Time'), div()),
+      div(axis_container = div())
+    ));
+    new plok.topaxis(axis_container, this.view);
 
     U.foreach(t.series, function(name) {
-      var data = new plok.data();
+      var chart_container;
+      this.charts.appendChild(div(
+        div(h3(name), div()),
+        div(chart_container = div())
+      ));
+
+      var chart = new plok.chart(chart_container, this.view)
 
       var url = '/api/trip/%(tid)s/%s/range/%(ts_start)s/%(ts_end)s';
       pyy.io.get(U.format(url, name, t), function(text) {
         json = U.json(text);
         // map timestamps to js times
         U.foreach(json, function(a) { a[0] *= 1000; });
-        data.data = json;
+        make_chart_for(chart, name, json);
         this.view.update();
       }, this);
-
-      var c1 = div({style: {height: '200px'}});
-      this.charts.appendChild(div(h4(name), c1));
-      new plok.chart(c1, this.view, data)
-
     }, this);
 
     return dom;
@@ -172,4 +179,17 @@ U.mix(TripUI.prototype, {
   }
 });
 
-
+function make_chart_for(chart, name, json) {
+  if (/^canusb\./.test(name)) {
+    var p = json[0][1];
+    for (var i = 0; i < p.len; i++) {
+      d = []
+      for (var j = 0; j < json.length; j++) {
+        d.push([json[j][0], json[j][1].data[i]]);
+      }
+      chart.add_data(new plok.data(d));
+    }
+    return;
+  }
+  chart.add_data(new plok.data(json));
+}

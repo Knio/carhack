@@ -29,7 +29,7 @@ def index(request):
 @get('^/api/trips$')
 @json
 def trips(request):
-    return {tid:trip.to_json() for tid,trip in app.trips.iteritems()}
+    return {tid: trip.to_json() for tid, trip in app.trips.iteritems()}
 
 
 @get('^/api/trip/(\d[8])$')
@@ -42,6 +42,13 @@ def get_series(request, tid):
     }
 
 
+def encode(x):
+    if isinstance(x, (int, float, str, tuple, dict, list)):
+        return x
+    if hasattr(x, 'tojson'):
+        return x.tojson()
+    raise Exception(x)
+
 @get('^/api/trip/([\d\-_]+)/([a-zA-Z0-9.]+)/range/(\d+\.\d+)/(\d+\.\d+)$')
 @json
 def get_range(self, tid, series_name, start_ts, end_ts):
@@ -50,4 +57,4 @@ def get_range(self, tid, series_name, start_ts, end_ts):
     start_ts = float(start_ts)
     end_ts = float(end_ts)
     data = series.get_range(start_ts, end_ts)
-    return data
+    return [(ts, encode(value)) for ts, value in data]

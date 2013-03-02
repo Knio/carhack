@@ -46,14 +46,13 @@ class Frame(object):
             self.timestamp, self.id, self.flags, self.len, *data)
 
     def tojson(self):
-        import json
-        return json.dumps(dict(
+        return dict(
             timestamp=self.timestamp,
             id=self.id,
             flags=self.flags,
             len=self.len,
             data=self.data
-        ))
+        )
 
 
 if __name__ == '__main__':

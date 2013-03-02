@@ -8,6 +8,9 @@ class CarAppPage(pyy.html.document):
 
     self.head += link(rel='stylesheet', href='http://plok.zkpq.ca/plok.css', type='terxt/css')
 
+    self.head += link(rel='stylesheet', href='/static/normalize.css', type='terxt/css')
+    self.head += link(rel='stylesheet', href='/static/carapp.css', type='terxt/css')
+
     self.head += script(src='http://pyy.zkpq.ca/pyy.js')
     # self.head += script(src='http://plok.zkpq.ca/plok.js')
     self.head += script(src='/lib/plok/plok.js')

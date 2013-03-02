@@ -50,9 +50,9 @@ class Trip(object):
       ts_start=self.ts_start,
       ts_end=self.ts_end,
 
-      sensors=self.sensors.keys(),
-      processors=self.processors.keys(),
-      series=self.series.keys()
+      sensors=sorted(self.sensors.keys()),
+      processors=sorted(self.processors.keys()),
+      series=sorted(self.series.keys()),
     )
 
 
