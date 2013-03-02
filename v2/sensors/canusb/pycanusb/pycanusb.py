@@ -251,6 +251,7 @@ class CanUSB(object):
             self.__lib = WinDLL("canusbdrv.dll")
         except Exception:
             print("Couldn't load canusbdrv.dll")
+            raise
             return None
         self.__cb_set = False
 
@@ -260,6 +261,7 @@ class CanUSB(object):
         self.__handle = self.__canusb_Open(id, bitrate, a_code, a_mask, flags)
         if self.__handle <= 0:
             print("Could not open device")
+            raise
             return None
 
         self.__canusb_Read = self.__lib.canusb_Read
@@ -499,6 +501,7 @@ class CanUSB(object):
 
 import time
 import logging
+from frame import Frame
 
 def open(name=None, bitrate=None, flags=None, callback=None):
     '''
@@ -540,7 +543,7 @@ def open(name=None, bitrate=None, flags=None, callback=None):
 
     if bitrate is None:
         bitrates = [
-            '10'
+            '10',
             '20',
             '50',
             '100',
