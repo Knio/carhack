@@ -7,6 +7,7 @@ assets: \
 	web/assets/plok.css \
 	web/assets/plok.js \
 	web/assets/pyy.js \
+	web/assets/moment.min.js \
 	web/assets/fonts
 
 web/assets/normalize.css:
@@ -21,8 +22,12 @@ web/assets/plok.js:
 web/assets/pyy.js:
 	wget -O $@ http://pyy.zkpq.ca/pyy.js
 
+web/assets/moment.min.js:
+	wget -O $@ https://raw.github.com/timrwood/moment/2.0.0/min/moment.min.js
+
 web/assets/fonts:
 	wget -O $@ http://themes.googleusercontent.com/static/fonts/lato/v6/boeCNmOCCh-EWFLSfVffDg.woff
 	wget -O $@ http://themes.googleusercontent.com/static/fonts/lato/v6/KT3KS9Aol4WfR6Vas8kNcg.woff
 	wget -O $@ http://themes.googleusercontent.com/static/fonts/lato/v6/9k-RPmcnxYEPm8CNFsH2gg.woff
 	wget -O $@ http://themes.googleusercontent.com/static/fonts/lato/v6/wkfQbvfT_02e2IWO3yYueQ.woff
+

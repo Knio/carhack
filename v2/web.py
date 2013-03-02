@@ -5,7 +5,7 @@ from pyy.web.tornado_simple_server import *
 
 
 server.add_static_route('^/static/(.*)$', 'web/static')
-server.add_static_route('^/lib/plok/(.*)$', '../../plok')
+server.add_static_route('^/assets/(.*)$', 'web/assets')
 
 import page
 
