@@ -38,6 +38,11 @@ class TimeSeriesInterface(object):
     return self.get(i)
 
   def get_range(self, start, end):
+    '''
+    return array of (timestamp, value) enties
+    where the first timestamp is <= start
+    and the last timestamp is < end
+    '''
     raise NotImplementedError
 
 

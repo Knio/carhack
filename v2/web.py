@@ -5,6 +5,7 @@ from pyy.web.tornado_simple_server import *
 
 
 server.add_static_route('^/static/(.*)$', 'web/static')
+server.add_static_route('^/lib/plok/(.*)$', '../../plok')
 
 import page
 
@@ -28,7 +29,7 @@ def index(request):
 @get('^/api/trips$')
 @json
 def trips(request):
-    return [trip.to_json() for trip in app.trips.values()]
+    return {tid:trip.to_json() for tid,trip in app.trips.iteritems()}
 
 
 @get('^/api/trip/(\d[8])$')
@@ -41,7 +42,7 @@ def get_series(request, tid):
     }
 
 
-@get('^/api/trip/([\d\-_]+)/(\w+)/range/(\d+\.\d+)/(\d+\.\d+)$')
+@get('^/api/trip/([\d\-_]+)/([a-zA-Z0-9.]+)/range/(\d+\.\d+)/(\d+\.\d+)$')
 @json
 def get_range(self, tid, series_name, start_ts, end_ts):
     trip = app.trips[tid]
