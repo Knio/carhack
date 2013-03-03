@@ -1,5 +1,5 @@
 import cgitb
 cgitb.enable(format='text')
 
-from src.carapp import app
+from carhack import app
 app.run()

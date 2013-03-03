@@ -53,13 +53,15 @@ div.row > div:first-child > a {
 }
 
 div.row > div:last-child {
-    height: 100px;
+    /*height: 100px;*/
     margin-right: 200px;
 }
 div.row > div:last-child > div {
     height: 100px;
 }
-
+div.row.time > div:last-child > div {
+    height: auto;
+}
 div.row.hide > div:last-child {
     display: none;
 }

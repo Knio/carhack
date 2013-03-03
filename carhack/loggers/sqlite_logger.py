@@ -56,7 +56,8 @@ class SQLiteTimeSeries(time_series.TimeSeriesInterface):
         data = pickle.loads(bytes)
         return ts, data
 
-    def get_range(self, start, end=1e10):
+    def get_range(self, start, end=None):
+        end = end or 1e10
         self.curs.execute('''SELECT max(id) FROM data WHERE ts <= ?''', (start,))
         r = self.curs.fetchone()
         s = r[0] or 0

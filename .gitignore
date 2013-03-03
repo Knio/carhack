@@ -1,7 +1,7 @@
 Build
 logs
 data
-src/web/assets
+carhack/web/assets
 carhack.sublime-*
 *.pyc
 

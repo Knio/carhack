@@ -39,7 +39,6 @@ window.app = new CarApp();
 
 var nice_date = function(date) {
   return moment(date).format('LLL');
-  return date.toISOString() + " " + date.toLocaleTimeString();
 };
 
 var nice_duration = function(s) {
@@ -129,9 +128,51 @@ U.mix(CarAppUi.prototype, {
 function TripUI(trip) {
   window.tripui = this;
   this.trip = trip;
-  this.view = new plok.view(trip.date_start, trip.date_end);
-  this.view.scale = 250.0;
-  this.view.set(trip.date_end);
+  this.view = new plok.view(trip.date_start, trip.live ? null : trip.date_end);
+  this.view.scale = 100.0;
+  this.view.set(trip.live ? +new Date() : trip.date_end);
+  this.rows = [];
+  this.socket = null;
+  if (trip.live) {
+    this.socket = new WebSocket(U.format('ws://%s/api/socket', window.location.host));
+
+    var subscriptions = {};
+    this.subscribe = function(name, cb, context) {
+      if (subscriptions[name] === undefined) {
+        subscriptions[name] = U.event();
+        var msg = U.json({series: U.keys(subscriptions)});
+        this.socket.send(msg);
+      }
+      subscriptions[name].subscribe(cb, context);
+    }
+    this.unsubscribe = function(name, cb, context) {
+      subscriptions[name].unsubscribe(cb, context);
+      if (subscriptions[name].len() === 0) {
+        delete subscriptions[name];
+        var msg = U.json({series: U.keys(subscriptions)});
+        this.socket.send(msg);
+      }
+    }
+
+    this.socket.onopen = function(e) {
+      console.log(e);
+    };
+    this.socket.onclose = function(e) {
+      console.log(e);
+    };
+    this.socket.onerror = function(e) {
+      console.log(e);
+    };
+    this.socket.onmessage = function(e) {
+      var data = U.json(e.data);
+      if (subscriptions[data.name] === undefined) {
+        return;
+      }
+      subscriptions[data.name](data.data[0], data.data[1]);
+    }
+
+    this.view.animate();
+  }
 
   this.dom = this.build_dom();
 };
@@ -141,19 +182,22 @@ U.mix(TripUI.prototype, {
     var dom = div(
       {class:'trip'},
       h2(t.title),
-      div(nice_date_and_duration(t.date_start, t.date_end)),
+      t.live ?
+        nice_date(t.date_start) + ' - Now' :
+        div(nice_date_and_duration(t.date_start, t.date_end)),
       this.charts = div({class:'charts'})
     );
 
     var axis_container
-    this.charts.appendChild(div(
+    this.charts.appendChild(div({class:'row time'},
       div(h3('Time'), div()),
       div(axis_container = div())
     ));
     new plok.topaxis(axis_container, this.view);
 
     U.foreach(t.series, function(name) {
-      var row = new RawRow(t, this.view, name);
+      var row = new RawRow(t, this, this.view, name);
+      this.rows.push(row);
       this.charts.appendChild(row.dom);
     }, this);
 
@@ -162,19 +206,24 @@ U.mix(TripUI.prototype, {
 
   destroy: function() {
     this.view.destroy();
+    U.foreach(this.rows, function(row) {
+      row.hide();
+    });
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
   }
 });
 
 
-function RawRow(trip, view, name) {
+function RawRow(trip, ui, view, name) {
 
   var chart_container;
-  var data = null;
   var legend;
   var legend_events;
   this.chart = null;
-
-
+  this.data = null;
 
   this.show = function() {
     this.chart = new plok.chart(chart_container, view);
@@ -184,11 +233,17 @@ function RawRow(trip, view, name) {
 
   this.hide = function() {
     view.unsubscribe(legend_events);
-    this.chart.destroy();
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = null;
+    }
     this.dom.className = 'row hide';
-    this.chart = null;
     pyy(legend).clear();
     pyy(chart_container).clear();
+    if (trip.live && this.cb) {
+      ui.unsubscribe(name, this.cb, this);
+      this.cb = null;
+    }
   };
 
   this.dom = div({class:'row hide'},
@@ -202,7 +257,7 @@ function RawRow(trip, view, name) {
   );
 
   this.get_data = function() {
-    if (this.data) {
+    if (this.data && !trip.live) {
       this.show_data();
       return;
     }
@@ -212,6 +267,25 @@ function RawRow(trip, view, name) {
       this.data = this.parse_data(U.json(text));
       this.show_data();
     }, this);
+
+    if (trip.live) {
+      ui.subscribe(name, this.cb=function(ts, value) {
+        if (!this.data) { return; }
+        if (/^canusb\./.test(name)) {
+          for (var i = 0; i < value.len; i++) {
+            var ts = ts * 1000;
+            this.data['ABCDEFGH'.charAt(i)].append(ts, value.data[i]);
+          }
+        }
+        if (/^test\./.test(name)) {
+          var ts = ts * 1000;
+          this.data['A'].append(ts, value);
+        }
+        if (ts < view.end) {
+          view.update();
+        }
+      }, this);
+    }
   }
 
   this.parse_data = function(json) {

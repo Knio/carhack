@@ -14,7 +14,7 @@ class CanUsb(sensor.Sensor):
 
     ioloop.add_callback(lambda:self.publish(
       'can.%03x' % frame.id,
-      frame.timestamp, frame))
+      frame.timestamp, frame.tojson()))
 
 
 # import pycanusb.Frame

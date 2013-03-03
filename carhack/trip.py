@@ -16,6 +16,9 @@ class Publisher(object):
   def subscribe(self, name, subscriber):
     self.subscribers[name].append(subscriber)
 
+  def unsubscribe(self, name, subscriber):
+    self.subscribers[name].remove(subscriber)
+
   def fire(self, name, timestamp, value):
     for subscriber in self.subscribers[name]:
       subscriber(timestamp, value)
