@@ -25,7 +25,7 @@ class Singleton(object):
 class CarApp(Singleton):
   def __init__(self):
     self.config = ConfigParser.ConfigParser()
-    self.config.read(['defaults.ini', 'config.ini'])
+    self.config.read(['src/defaults.ini', 'config.ini'])
 
     self.data_path = self.config.get('Carhack', 'data_path')
     if not os.path.isdir(self.data_path):
@@ -48,8 +48,9 @@ class CarApp(Singleton):
   def load_trips(self):
     for tid in os.listdir(self.data_path):
       path = os.path.join(self.data_path, tid)
-      logged_trip = trip.LoggedTrip(tid, path)
-      self.trips[tid] = logged_trip
+      if os.path.isfile(os.path.join(path, trip.CONFIG_NAME)):
+        logged_trip = trip.LoggedTrip(tid, path)
+        self.trips[tid] = logged_trip
 
   def run(self):
     self.load_trips()

@@ -7,6 +7,8 @@ from collections import defaultdict
 import loggers
 import sensors
 
+CONFIG_NAME = 'LOG_CONFIG'
+
 class Publisher(object):
   def __init__(self):
     self.subscribers = defaultdict(list)
@@ -80,7 +82,7 @@ class LoggedTrip(Trip):
   def __init__(self, tid, path):
     name = tid
     super(LoggedTrip, self).__init__(tid, path)
-    self.config = json.load(open(self.j('CONFIG'), 'rb'))
+    self.config = json.load(open(self.j(CONFIG_NAME), 'rb'))
     self.ts_start, self.ts_end = self.config['time_interval']
     self.load_logs()
 
@@ -97,7 +99,7 @@ class LoggedTrip(Trip):
       ns = name.split('.')[0]
       if ns not in self.config['sensors']: continue
       series = loggers.get_logger(name)()
-      series.open(filename)
+      series.open(self.j(filename))
       self.series[name] = series
 
   def recalculate(self):
@@ -123,7 +125,7 @@ class LiveTrip(Trip, Publisher):
     self.init_sensors()
 
   def write_manifest(self):
-    with open(self.j('CONFIG'), 'wb') as f:
+    with open(self.j(CONFIG_NAME), 'wb') as f:
       json.dump(self.config, f, indent=1)
 
   def close(self):
@@ -158,8 +160,8 @@ class LiveTrip(Trip, Publisher):
         path = 'primary'
       if ns in self.processors:
         path = 'secondary'
-      filename = self.j(path, '%s.dat' % name)
-      series.open(filename)
+      filename = os.path.join(path, '%s.dat' % name)
+      series.open(self.j(filename))
       self.series[name] = series
       self.config['series'][name] = filename
     self.series[name].append(timestamp, value)

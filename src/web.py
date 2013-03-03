@@ -4,15 +4,14 @@ import decorator
 from pyy.web.tornado_simple_server import *
 
 
-server.add_static_route('^/static/(.*)$', 'web/static')
-server.add_static_route('^/assets/(.*)$', 'web/assets')
+server.add_static_route('^/static/(.*)$', 'src/web/static')
+server.add_static_route('^/assets/(.*)$', 'src/web/assets')
 
 import page
 
 def init(_app):
     global app
     app = _app
-    server.add_static_route('^/static/(.*)$', 'static')
 
 @decorator.decorator
 def json(func, *args, **kwargs):
