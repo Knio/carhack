@@ -20,7 +20,7 @@ class CarAppPage(pyy.html.document):
     with self:
       with div():
         h1('CarHack')
-        a('View trips', href='/api/trips')
+        span('Select trip:')
 
       div(id='carapp')
       script('''window.appui = new CarAppUi('#carapp');''')

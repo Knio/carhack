@@ -153,22 +153,8 @@ U.mix(TripUI.prototype, {
     new plok.topaxis(axis_container, this.view);
 
     U.foreach(t.series, function(name) {
-      var chart_container;
-      this.charts.appendChild(div(
-        div(h3(name), div()),
-        div(chart_container = div())
-      ));
-
-      var chart = new plok.chart(chart_container, this.view)
-
-      var url = '/api/trip/%(tid)s/%s/range/%(ts_start)s/%(ts_end)s';
-      pyy.io.get(U.format(url, name, t), function(text) {
-        json = U.json(text);
-        // map timestamps to js times
-        U.foreach(json, function(a) { a[0] *= 1000; });
-        make_chart_for(chart, name, json);
-        this.view.update();
-      }, this);
+      var row = new RawRow(t, this.view, name);
+      this.charts.appendChild(row.dom);
     }, this);
 
     return dom;
@@ -179,17 +165,98 @@ U.mix(TripUI.prototype, {
   }
 });
 
-function make_chart_for(chart, name, json) {
-  if (/^canusb\./.test(name)) {
-    var p = json[0][1];
-    for (var i = 0; i < p.len; i++) {
-      d = []
-      for (var j = 0; j < json.length; j++) {
-        d.push([json[j][0], json[j][1].data[i]]);
-      }
-      chart.add_data(new plok.data(d));
+
+function RawRow(trip, view, name) {
+
+  var chart_container;
+  var data = null;
+  var legend;
+  var legend_events;
+  this.chart = null;
+
+
+
+  this.show = function() {
+    this.chart = new plok.chart(chart_container, view);
+    this.get_data();
+    this.dom.className = 'row show';
+  };
+
+  this.hide = function() {
+    view.unsubscribe(legend_events);
+    this.chart.destroy();
+    this.dom.className = 'row hide';
+    this.chart = null;
+    pyy(legend).clear();
+    pyy(chart_container).clear();
+  };
+
+  this.dom = div({class:'row hide'},
+    div(
+      a({href:'#', onclick:this.show, context:this}, '[show]'),
+      a({href:'#', onclick:this.hide, context:this}, '[hide]'),
+      h3(name),
+      legend = div()
+    ),
+    div(chart_container = div())
+  );
+
+  this.get_data = function() {
+    if (this.data) {
+      this.show_data();
+      return;
     }
-    return;
+    var url = '/api/trip/%(tid)s/%s/range/%(ts_start)s/%(ts_end)s';
+    pyy(legend)('LOADING...');
+    pyy.io.get(U.format(url, name, trip), function(text) {
+      this.data = this.parse_data(U.json(text));
+      this.show_data();
+    }, this);
   }
-  chart.add_data(new plok.data(json));
+
+  this.parse_data = function(json) {
+    var data = {};
+
+    if (/^canusb\./.test(name)) {
+      var len = json[0][1].len;
+      for (var i = 0; i < len; i++) {
+        var d = [];
+        for (var j = 0; j < json.length; j++) {
+          d.push([json[j][0] * 1000, json[j][1].data[i]]);
+        }
+        data['ABCDEFGH'.charAt(i)] = new plok.data(d);
+      }
+    }
+
+    if (/^test\./.test(name)) {
+      for (var j = 0; j < json.length; j++) { json[j][0] *= 1000; }
+      data['A'] = new plok.data(json);
+    }
+
+    return data;
+  };
+
+  this.show_data = function() {
+    var l = pyy(legend).clear();
+    var f = [];
+    U.foreach(this.data, function(d, name) {
+      this.chart.add_data(d);
+      var s = span();
+      l.div(name, s);
+      f.push([d, s]);
+    }, this);
+
+    view.subscribe(legend_events = {
+      focus: function(ts) {
+        U.foreach(f, function(v) {
+          var x = v[0].get_value(ts);
+          pyy(v[1]).clear().text(U.format("%03d", x));
+        });
+      },
+      update: function() {}
+    });
+    window.setTimeout(function() {
+      view.update();
+    }, 0);
+  };
 }

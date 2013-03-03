@@ -564,15 +564,32 @@ def open(name=None, bitrate=None, flags=None, callback=None):
     num_frames = [0]
     def read(frame):
         num_frames[0] += 1
+
+        now = time.time()
         if flags & FLAG_TIMESTAMP:
+            # ms from device, rolls over at 60000
             ts = frame.timestamp
-            ms = ts / 1000.
+            # offset in seconds from arbitrary start point
+            offset = ts / 1000.
+
             if ts < (last_ts[0] - 10000):
-                start[0] = time.time() - ms
+                # ts has rolled over,
+                # rezero start to rollover point
+                start[0] = time.time() - offset
             last_ts[0] = ts
-            frame.timestamp = start[0] + ms
+
+            new = start[0] + offset
+            if new > now:
+                # frame is from the future!
+                # (device clock is running too fast)
+                # rezero the clock so that new==now
+                new = now
+                start[0] = now - offset
+
+            frame.timestamp = new
+
         else:
-            frame.timestamp = time.time()
+            frame.timestamp = now
 
         try:
             callback(frame)
