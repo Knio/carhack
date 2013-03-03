@@ -21,8 +21,9 @@ Tested on `Win XP 32bit` (works) and `Win 7 64bit` (works, using 32bit python)
     * Install setuptools
     * Install pip
     * Install tornado
-    * Install pyy
+    * Install decorator
     * Install greenlet
+    * Install pyy
 
 
 * Install CANUSB FTDI Drivers
@@ -61,15 +62,6 @@ GPS
 ---
 
 None yet :(
-
-
-Data
-----
-
-https://ting.com/devices/SierraU250
-
-Has GPS too
-
 
 
 Music

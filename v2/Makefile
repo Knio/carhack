@@ -42,4 +42,5 @@ web/assets/fonts/wkfQbvfT_02e2IWO3yYueQ.woff:
 
 
 clean:
-	-rm web/assets/*
+	-rm web/assets/fonts/*
+	-rm web/assets/*.*
