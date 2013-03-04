@@ -179,6 +179,7 @@ class LiveTrip(Trip, Publisher):
       os.mkdir(path)
     self.ts_start = time.time()
     self.init_sensors()
+    self.init_processors()
 
   def close(self):
     self.ts_end = time.time()
@@ -187,24 +188,36 @@ class LiveTrip(Trip, Publisher):
     for s in self.series.itervalues():
       s.close()
 
+  def init_processors(self):
+    d2 = self.j('secondary')
+    if not os.path.isdir(d2):
+      os.mkdir(d2)
+
+    processor_names = [name for (name, value) in app.config.items('processors')
+      if app.config.getboolean('processors', name)]
+
+    self.config['processors'] = processor_names
+    for name in processor_names:
+      log.info('loading processor %s' % name)
+      processor = processors.get_processor(name)(self)
+      self.processors[name] = processor
+
   def init_sensors(self):
     d1 = self.j('primary')
     if not os.path.isdir(d1):
       os.mkdir(d1)
 
-    sensor_names = app.config.items('sensors')
-    for sensor_name, value in sensor_names:
-      if not app.config.getboolean('sensors', sensor_name):
-        continue
-      self.init_sensor(sensor_name)
+    sensor_names = [name for (name, value) in app.config.items('sensors')
+      if app.config.getboolean('sensors', name)]
 
-  def init_sensor(self, name):
-      self.config['sensors'].append(name)
+    self.config['sensors'] = sensor_names
+    for name in sensor_names:
       log.info('Loading sensor %s' % name)
       sensor = sensors.get_sensor(name)()
       self.sensors[name] = sensor
 
   def publish(self, name, ts, value):
+    # log.debug("%10.3f %s %r" % (ts, name, value))
     self.write_series(name, ts, value)
     self.fire(name, ts, value)
 
