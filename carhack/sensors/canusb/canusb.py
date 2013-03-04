@@ -1,11 +1,11 @@
 import tornado.ioloop
 
-import sensor
+import carhack.sensors
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
 
-class CanUsb(sensor.Sensor):
+class CanUsb(carhack.sensors.Sensor):
   def __init__(self, name=None, bitrate='500', flags=None):
     import pycanusb
     self.canusb = pycanusb.open(name, bitrate, flags, self.read_callback)

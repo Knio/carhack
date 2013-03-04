@@ -4,12 +4,12 @@ import random
 import threading
 import tornado.ioloop
 
-import carhack.sensor
+import carhack.sensors
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
 
-class TestSensor(carhack.sensor.Sensor):
+class TestSensor(carhack.sensors.Sensor):
   def __init__(self):
     self.start_thread('random1', self.random1)
     self.start_thread('sin1', self.sin1)
