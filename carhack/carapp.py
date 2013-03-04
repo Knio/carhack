@@ -42,6 +42,7 @@ class CarApp(Singleton):
     self.trips[tid] = self.live_trip
 
   def start_web_server(self):
+    web.server.port = self.config.getint('webui', 'port')
     web.init(self)
     web.server.start()
 
