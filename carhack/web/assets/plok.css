@@ -1,0 +1,19 @@
+
+svg.plok-axis {
+    display: block;
+    font: 10px sans-serif;
+}
+
+
+svg.plok-axis line {
+  background: #000;
+  opacity: .2;
+  z-index: 2;
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+svg.plok-axis path {
+  display: none;
+}

@@ -155,14 +155,14 @@ Sends every 10ms:
 
 * `A` - 0
 * `B` - Bitfield
-    * `B1` - Unknown - goes high when lifting
+    * `B1` - Unknown - High when `580` `A`,`B` is 0.
     * `B2-B7` - 0
 * `C` - 0
 * `D` - 0
 * `E` - Unknown
 * `F` - Unknown
 * `G` - Unknown
-* `H` - Unknown - higher when engine acellerating, cuts out when lifting
+* `H` - Unknown - higher when engine accelerating, cuts out when lifting
 
 
 ID 1F9 - Unknown

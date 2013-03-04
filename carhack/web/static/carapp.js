@@ -275,6 +275,7 @@ function RawRow(trip, ui, view, name) {
     pyy(legend)('LOADING...');
     pyy.io.get(U.format(url, name, trip), function(text) {
       this.data = this.parse_data(U.json(text));
+      if (!this.chart) { return; } // canceled
       this.show_data();
     }, this);
 
