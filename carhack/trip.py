@@ -11,6 +11,10 @@ import processors
 
 CONFIG_NAME = 'LOG_CONFIG'
 
+
+def normpath(x):
+  return x.replace('\\','/')
+
 class Publisher(object):
   def __init__(self):
     self.subscribers = defaultdict(list)
@@ -44,6 +48,7 @@ class Trip(object):
     self.config = dict(sensors=[], processors=[], series={})
 
   def j(self, *args):
+    args = map(normpath, args)
     return os.path.join(self.path, *args)
 
   def write_manifest(self):
@@ -78,7 +83,7 @@ class Trip(object):
       filename = os.path.join(path, '%s.dat' % name)
       series.open(self.j(filename))
       self.series[name] = series
-      self.config['series'][name] = filename
+      self.config['series'][name] = normpath(filename)
     self.series[name].append(ts, value)
 
 
