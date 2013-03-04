@@ -25,7 +25,7 @@ class Singleton(object):
 class CarApp(Singleton):
   def __init__(self):
     self.config = ConfigParser.ConfigParser()
-    self.config.read(['src/defaults.ini', 'config.ini'])
+    self.config.read(['carhack/defaults.ini', 'config.ini'])
 
     self.data_path = self.config.get('Carhack', 'data_path')
     if not os.path.isdir(self.data_path):

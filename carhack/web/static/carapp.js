@@ -185,6 +185,8 @@ U.mix(TripUI.prototype, {
       t.live ?
         nice_date(t.date_start) + ' - Now' :
         div(nice_date_and_duration(t.date_start, t.date_end)),
+      t.live ? null : a({href:'#', onclick:this.recalculate, context:this},
+        '[recalculate data]'),
       this.charts = div({class:'charts'})
     );
 
@@ -202,6 +204,12 @@ U.mix(TripUI.prototype, {
     }, this);
 
     return dom;
+  },
+
+  recalculate: function() {
+    I.get(U.format('/api/trip/%s/recalculate', this.trip.tid), function(json) {
+      alert(json);
+    }, this);
   },
 
   destroy: function() {
@@ -225,13 +233,15 @@ function RawRow(trip, ui, view, name) {
   this.chart = null;
   this.data = null;
 
-  this.show = function() {
+  this.show = function(e) {
+    if (e) { e.preventDefault(); }
     this.chart = new plok.chart(chart_container, view);
     this.get_data();
     this.dom.className = 'row show';
   };
 
-  this.hide = function() {
+  this.hide = function(e) {
+    if (e) { e.preventDefault(); }
     view.unsubscribe(legend_events);
     if (this.chart) {
       this.chart.destroy();
@@ -277,7 +287,7 @@ function RawRow(trip, ui, view, name) {
             this.data['ABCDEFGH'.charAt(i)].append(ts, value.data[i]);
           }
         }
-        if (/^test\./.test(name)) {
+        if (/^test/.test(name)) {
           var ts = ts * 1000;
           this.data['A'].append(ts, value);
         }
@@ -302,7 +312,7 @@ function RawRow(trip, ui, view, name) {
       }
     }
 
-    if (/^test\./.test(name)) {
+    if (/^test/.test(name)) {
       for (var j = 0; j < json.length; j++) { json[j][0] *= 1000; }
       data['A'] = new plok.data(json);
     }

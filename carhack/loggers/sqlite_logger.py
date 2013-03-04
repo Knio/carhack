@@ -50,6 +50,8 @@ class SQLiteTimeSeries(time_series.TimeSeriesInterface):
         self.size += 1
 
     def get(self, i):
+        if i >= self.size:
+            raise IndexError
         self.curs.execute('''SELECT id, ts, data FROM data
             WHERE (id = ?)''', (i,))
         i, ts, bytes = self.curs.fetchone()

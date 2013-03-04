@@ -2,10 +2,12 @@ import os
 import re
 import time
 import json
+import shutil
 from collections import defaultdict
 
 import loggers
 import sensors
+import processors
 
 CONFIG_NAME = 'LOG_CONFIG'
 
@@ -21,9 +23,6 @@ class Publisher(object):
 
   def fire(self, name, timestamp, value):
     for subscriber in self.subscribers[name]:
-      subscriber(timestamp, value)
-
-    for subscriber in self.subscribers[None]:
       subscriber(timestamp, value)
 
 
@@ -42,8 +41,14 @@ class Trip(object):
 
     self.series = {}
 
+    self.config = dict(sensors=[], processors=[], series={})
+
   def j(self, *args):
     return os.path.join(self.path, *args)
+
+  def write_manifest(self):
+    with open(self.j(CONFIG_NAME), 'wb') as f:
+      json.dump(self.config, f, indent=1)
 
   def to_json(self):
     return dict(
@@ -60,6 +65,22 @@ class Trip(object):
       series=sorted(self.series.keys()),
     )
 
+  def write_series(self, name, timestamp, value):
+    if not name in self.series:
+      series = loggers.get_logger(name)()
+      ns = name.split('.')[0]
+      if ns in self.sensors:
+        path = 'primary'
+      elif ns in self.processors:
+        path = 'secondary'
+      else:
+        raise Exception
+      filename = os.path.join(path, '%s.dat' % name)
+      series.open(self.j(filename))
+      self.series[name] = series
+      self.config['series'][name] = filename
+    self.series[name].append(timestamp, value)
+
 
 import heapq
 def series_reader(series):
@@ -74,7 +95,7 @@ def series_reader(series):
     timestamp, value, i, name = heapq.heappop(next)
     s = series[name]
     _i = i + 1
-    if i < len(s):
+    if _i < len(s):
       _timestamp, _value = s[_i]
       heapq.heappush(next, (_timestamp, _value, _i, name))
     yield name, (timestamp, value)
@@ -93,11 +114,6 @@ class LoggedTrip(Trip):
     self.sensors = {i:None for i in self.config['sensors']}
     self.processors = {i:None for i in self.config['processors']}
 
-    d1 = self.j('primary')
-    d2 = self.j('secondary')
-    if not os.path.isdir(d2):
-      os.mkdir(d2)
-
     for name, filename in self.config['series'].iteritems():
       ns = name.split('.')[0]
       if ns not in self.config['sensors']: continue
@@ -107,13 +123,41 @@ class LoggedTrip(Trip):
 
   def recalculate(self):
     pub = Publisher()
-    reader = LogReader(self.series.values())
 
-    # TODO setup processors
-    raise NotImplementedError
+    # delete old logs
+    d2 = self.j('secondary')
+    for name, filename in self.config['series'].items():
+      if filename.startswith(d2):
+        self.series[name].close()
+        del self.series[name]
+        del self.config[name]
+        os.remove(filename)
 
-    for name, (timestamp, value) in series_reader(self.series):
-      pub.fire(name, timestamp, value)
+    if not os.path.isdir(d2):
+      os.mkdir(d2)
+    assert os.listdir(d2) == []
+
+    def publish(name, ts, value):
+      self.write_series(name, ts, values)
+      pub.fire(name, ts, value)
+
+    pub.publish = publish
+
+    processor_names = [name for (name, value) in app.config.items('processors')
+      if app.config.getboolean('processors', name)]
+
+    self.processors = {}
+    self.config['processors'] = processor_names
+
+    # TODO wipe series manifest??
+    for processor_name in processor_names:
+      processor = processors.get_processor(processor_name)(pub)
+      self.processors[processor_name] = processor
+
+    for name, (ts, value) in series_reader(self.series):
+      pub.fire(name, ts, value)
+
+    self.write_manifest()
 
 
 class LiveTrip(Trip, Publisher):
@@ -123,13 +167,8 @@ class LiveTrip(Trip, Publisher):
     log.info('Initializing current trip %s' % tid)
     if not os.path.isdir(path):
       os.mkdir(path)
-    self.config = dict(sensors=[], processors=[], series={})
     self.ts_start = time.time()
     self.init_sensors()
-
-  def write_manifest(self):
-    with open(self.j(CONFIG_NAME), 'wb') as f:
-      json.dump(self.config, f, indent=1)
 
   def close(self):
     self.ts_end = time.time()
@@ -155,20 +194,9 @@ class LiveTrip(Trip, Publisher):
       sensor = sensors.get_sensor(name)()
       self.sensors[name] = sensor
 
-  def publish(self, name, timestamp, value):
-    if not name in self.series:
-      series = loggers.get_logger(name)()
-      ns = name.split('.')[0]
-      if ns in self.sensors:
-        path = 'primary'
-      if ns in self.processors:
-        path = 'secondary'
-      filename = os.path.join(path, '%s.dat' % name)
-      series.open(self.j(filename))
-      self.series[name] = series
-      self.config['series'][name] = filename
-    self.series[name].append(timestamp, value)
-    self.fire(name, timestamp, value)
+  def publish(self, name, ts, value):
+    self.write_series(name, ts, value)
+    self.fire(name, ts, value)
 
 
 from carapp import app, log

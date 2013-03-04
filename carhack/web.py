@@ -36,9 +36,9 @@ def encode(x):
     return x.tojson()
   raise Exception(x)
 
-@get('^/api/trip/([\d\-_]+)/([a-zA-Z0-9.]+)/range/(\d+\.?\d*)/(\d+\.?\d*)$')
+@get('^/api/trip/([\d\-_]+)/([a-zA-Z0-9._]+)/range/(\d+\.?\d*)/(\d+\.?\d*)$')
 @json
-def get_range(self, tid, series_name, start_ts, end_ts):
+def get_range(request, tid, series_name, start_ts, end_ts):
   trip = app.trips[tid]
   series = trip.series[series_name]
   start_ts = float(start_ts)
@@ -46,6 +46,14 @@ def get_range(self, tid, series_name, start_ts, end_ts):
   data = series.get_range(start_ts, end_ts)
   return data
   # return [(ts, encode(value)) for ts, value in data]
+
+
+@get('^/api/trip/([\d\-_]+)/recalculate')
+@json
+def reaclculate(request, tid):
+  trip = app.trips[tid]
+  trip.recalculate()
+  return dict(result='ok')
 
 import logging
 import tornado.websocket
