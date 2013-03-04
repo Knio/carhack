@@ -44,9 +44,9 @@ class Nissan370ZProcessor(Processor):
 
   def can_180(self, ts, A, B, C, D, E, F, G, H):
     rpm = signed_short(A, B)
-    throtle_position = percent(F)
+    throttle_position = percent(F)
     self.publish('rpm_a', ts, rpm)
-    self.publish('throtle_position', ts, throtle_position)
+    self.publish('throttle_pedal_position', ts, throttle_position)
 
   def can_1f9(self, ts, A, B, C, D, E, F, G, H):
     rpm = signed_short(C, D)
@@ -65,8 +65,8 @@ class Nissan370ZProcessor(Processor):
     self.publish('vehicle_speed_a', ts, vehicle_speed)
 
   def can_351(self, ts, A, B, C, D, E, F, G, H):
-    clutch_pedal_to_floor = bit(H & 0x04)
-    self.publish('clutch_pedal_to_floor_b', ts, clutch_pedal_to_floor)
+    clutch_pedal_pressed = bit(H & 0x04)
+    self.publish('clutch_pedal_pressed', ts, clutch_pedal_to_floor)
 
   def can_354(self, ts, A, B, C, D, E, F, G, H):
     tcs_indicator = bit(E & 0x80)
@@ -113,8 +113,8 @@ class Nissan370ZProcessor(Processor):
     self.publish('crusie_control_master_b', ts, crusie_control_master_b)
 
   def can_580(self, ts, A, B, C, D, E):
-    rpm = unsigned_short(A, B)
-    self.publish('rpm_c', ts, rpm)
+    throtle_body_position = unsigned_short(A, B)
+    self.publish('throtle_body_position', ts, throtle_body_position)
 
   def can_5c5(self, ts, A, B, C, D, E, F, G, H):
     parking_brake_indicator = bit(A & 0x04)

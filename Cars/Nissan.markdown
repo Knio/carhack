@@ -53,26 +53,14 @@ IGN ACC: no data
 IGN ON:
 
 
-    (X, Y, 0 or sometimes 1, 7, Z)
+    (A, B, C, D, E)
 
 
-* `X` - 127 - 204.
-* `Y` - 0 or 255
-* `Z` - 16-long repeating sequence
-
-X = 204: -15
-X = 203: +17
-X = 202: +17
-X = 124: +17
-
-?????
-
-
-* `A` - Steering wheel (wheels?) position lo
-* `B` - Steering wheel (wheels?) position hi
-    * 227 (full lock left) to 18 (full lock right)
-
-C, D - Power steering pump status?
+* `A`, `B` - Steering wheel angle
+    * NOTE: `B` is the high-order bit
+* `C` - Unknown - Goes up when steering (power steering under load)
+* `D` - Unknown - Always 7
+* `E` - Unknown - A strange permutation of 16 numbers
 
 
 ID 160 - Unknown
@@ -93,14 +81,15 @@ IGN ENG:
     (A, B, C, D, E, F, G)
 
 
-* `A`, `B` - sensor data, 16bits
-* `C` - sensor data. overflows go to `B`
-* `D` - sensor data. typically 0.
-* `E` - sensor data. 8, or 224 - G
-* `F` - sensor data. typically 255. related to `E` and `F`
-* `G` - sensor data. related to `E`. typically 224
+* `A` - Unknown - Sensor data.
+* `B` - Unknown - Bitfield.
+* `C` - Unknown - Sensor data. Related to throttle position
+* `D` - Unknown - Sensor data. typically 0.
+* `E` - Unknown - Bitfield. 8, or 224 - G
+* `F` - Unknown - Sensor data. typically 255. related to `E` and `F`
+* `G` - Unknown - Bitfield. related to `E`. typically 224
 
-Looks like something related to the engine
+`B`, `E`, `G` all change values when first acellerating
 
 
 ID 180 -- Unknown
@@ -130,10 +119,21 @@ where X counts up from 48 to 63 and repeats
 
     (A, B, C, D, E, F, G, H)
 
-* `A`, `B` Engine RPM.
-    * Same as 1F9 C,D
-* `F` - Throttle pedal postion, % (F/255 * 100)
-
+* `A`, `B` - Engine RPM.
+    * Same as `1F9` `C`,`D`
+* `C` - Unknown - Sensor data.
+* `D` - Unknown - Bitfield.
+* `E` - Unknown - Sensor data.
+* `F` - Throttle pedal postion, % `(F/255 * 100)`
+* `G` - Unknown - Sensor / Bitfield.
+* `H` - Bitfield
+    * `H1` - Unknown
+    * `H2` - 0
+    * `H3` - Unknown
+    * `H4` - 0
+    * `H5` - Unknown
+    * `H6` - 0
+    * `H7` - 0
 
 
 ID 182 - Unknown
@@ -147,16 +147,22 @@ When IGN in ON:
 
 Sends every 10ms:
 
-     (0, 0, 0, 0, 0, X, 0, 245)
+     (0, 0, 0, 0, 0, F, 0, 245)
 
 
-where X counts up from 32 to 47 and repeats
+`F` counts up from 32 to 47 and repeats
 
 
-Fuel??
-
-H - higher when engine acellerating, cuts out when lifting
-B - goes high when lifting
+* `A` - 0
+* `B` - Bitfield
+    * `B1` - Unknown - goes high when lifting
+    * `B2-B7` - 0
+* `C` - 0
+* `D` - 0
+* `E` - Unknown
+* `F` - Unknown
+* `G` - Unknown
+* `H` - Unknown - higher when engine acellerating, cuts out when lifting
 
 
 ID 1F9 - Unknown
