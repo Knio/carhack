@@ -21,9 +21,9 @@ class Publisher(object):
   def unsubscribe(self, name, subscriber):
     self.subscribers[name].remove(subscriber)
 
-  def fire(self, name, timestamp, value):
+  def fire(self, name, ts, value):
     for subscriber in self.subscribers[name]:
-      subscriber(timestamp, value)
+      subscriber(ts, value)
 
 
 class Trip(object):
@@ -65,7 +65,7 @@ class Trip(object):
       series=sorted(self.series.keys()),
     )
 
-  def write_series(self, name, timestamp, value):
+  def write_series(self, name, ts, value):
     if not name in self.series:
       series = loggers.get_logger(name)()
       ns = name.split('.')[0]
@@ -79,7 +79,7 @@ class Trip(object):
       series.open(self.j(filename))
       self.series[name] = series
       self.config['series'][name] = filename
-    self.series[name].append(timestamp, value)
+    self.series[name].append(ts, value)
 
 
 import heapq
@@ -88,17 +88,17 @@ def series_reader(series):
   for name in series:
     s = series[name]
     if len(s):
-      timestamp, value = s[0]
-      heapq.heappush(next, (timestamp, value, 0, name))
+      ts, value = s[0]
+      heapq.heappush(next, (ts, value, 0, name))
 
   while next:
-    timestamp, value, i, name = heapq.heappop(next)
+    ts, value, i, name = heapq.heappop(next)
     s = series[name]
     _i = i + 1
     if _i < len(s):
       _timestamp, _value = s[_i]
       heapq.heappush(next, (_timestamp, _value, _i, name))
-    yield name, (timestamp, value)
+    yield name, (ts, value)
 
 
 class LoggedTrip(Trip):
@@ -115,30 +115,34 @@ class LoggedTrip(Trip):
     self.processors = {i:None for i in self.config['processors']}
 
     for name, filename in self.config['series'].iteritems():
-      ns = name.split('.')[0]
-      if ns not in self.config['sensors']: continue
+      # ns = name.split('.')[0]
+      # if ns not in self.config['sensors']: continue
       series = loggers.get_logger(name)()
       series.open(self.j(filename))
       self.series[name] = series
 
   def recalculate(self):
+    log.info('recalculating trip %s' % self.tid)
     pub = Publisher()
 
     # delete old logs
-    d2 = self.j('secondary')
     for name, filename in self.config['series'].items():
-      if filename.startswith(d2):
+      if filename.startswith('secondary'):
         self.series[name].close()
         del self.series[name]
-        del self.config[name]
-        os.remove(filename)
+        del self.config['series'][name]
+        os.remove(self.j(filename))
 
+
+    d2 = self.j('secondary')
     if not os.path.isdir(d2):
       os.mkdir(d2)
     assert os.listdir(d2) == []
+    self.write_manifest()
 
     def publish(name, ts, value):
-      self.write_series(name, ts, values)
+      log.debug("%10.3f %s %r" % (ts, name, value))
+      self.write_series(name, ts, value)
       pub.fire(name, ts, value)
 
     pub.publish = publish
@@ -151,13 +155,19 @@ class LoggedTrip(Trip):
 
     # TODO wipe series manifest??
     for processor_name in processor_names:
+      log.info('loading processor %s' % processor_name)
       processor = processors.get_processor(processor_name)(pub)
       self.processors[processor_name] = processor
 
     for name, (ts, value) in series_reader(self.series):
       pub.fire(name, ts, value)
 
+    for series in self.series.itervalues():
+      series.close()
+
     self.write_manifest()
+
+    self.load_logs()
 
 
 class LiveTrip(Trip, Publisher):

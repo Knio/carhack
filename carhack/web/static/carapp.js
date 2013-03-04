@@ -185,8 +185,8 @@ U.mix(TripUI.prototype, {
       t.live ?
         nice_date(t.date_start) + ' - Now' :
         div(nice_date_and_duration(t.date_start, t.date_end)),
-      t.live ? null : a({href:'#', onclick:this.recalculate, context:this},
-        '[recalculate data]'),
+      // t.live ? null : a({href:'#', onclick:this.recalculate, context:this},
+      //   '[recalculate data]'),
       this.charts = div({class:'charts'})
     );
 
@@ -287,10 +287,19 @@ function RawRow(trip, ui, view, name) {
             this.data['ABCDEFGH'.charAt(i)].append(ts, value.data[i]);
           }
         }
-        if (/^test/.test(name)) {
+        else if (/^test/.test(name)) {
           var ts = ts * 1000;
           this.data['A'].append(ts, value);
         }
+        else if (/^nissan_370z/.test(name)) {
+          var ts = ts * 1000;
+          this.data['A'].append(ts, value);
+        }
+        else {
+          throw "unknown data format";
+        }
+
+
         if (ts < view.end) {
           view.update();
         }
@@ -312,9 +321,18 @@ function RawRow(trip, ui, view, name) {
       }
     }
 
-    if (/^test/.test(name)) {
+    else if (/^test/.test(name)) {
       for (var j = 0; j < json.length; j++) { json[j][0] *= 1000; }
       data['A'] = new plok.data(json);
+    }
+
+    else if (/^nissan_370z/.test(name)) {
+      for (var j = 0; j < json.length; j++) { json[j][0] *= 1000; }
+      data['A'] = new plok.data(json);
+    }
+
+    else {
+      throw "unknown data format";
     }
 
     return data;

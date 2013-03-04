@@ -1,9 +1,9 @@
-from collections import defaultdict
+
 
 class ProcessorMeta(type):
   def __init__(cls, name, bases, dict):
     super(ProcessorMeta, cls).__init__(name, bases, dict)
-    subscribe_list = defaultdict(list)
+    subscribe_list = []
     for func_name, val in dict.iteritems():
       series = getattr(val, '_subscribe_series', None)
       if series is None:
@@ -18,18 +18,23 @@ class Processor(object):
 
   def __init__(self, publisher):
     self.publisher = publisher
+    self._last_value = {}
+
     for series, func_name in type(self)._subscribe_list:
       method = getattr(self, func_name)
       publisher.subscribe(series, method)
 
-  def publish(self, name, timestamp, value):
+  def publish(self, name, timestamp, value, compress=True):
+    if compress and self._last_value.get(name, None) == value:
+      return
+    self._last_value[name] = value
     name = '%s.%s' % (self.name, name)
     self.publisher.publish(name, timestamp, value)
 
 
 def subscribe(series):
   def decorator(func):
-    func.subscribe_series = series
+    func._subscribe_series = series
     return func
 
   return decorator

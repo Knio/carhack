@@ -1,21 +1,18 @@
 import os
 import sys
-
 sys.path.insert(0, '.')
-print os.getcwd()
-print sys.path
 
+import cgitb
+cgitb.enable(format='text')
 
 from carapp import app
 
 
-
 def main():
     app.load_trips()
-    trip = app.trips['2013-03-02_23-41-28']
-    series = trip.series['test_sensor.random1']
-    for ts, frame in series:
-        print frame
+    trip = app.trips['2013-03-03_18-00-09']
+
+    trip.recalculate()
 
 
 if __name__ == '__main__':

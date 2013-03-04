@@ -169,7 +169,7 @@ When ignition goes from ACC to ON:
 
 ON:
 
-* C, D - Engine RPM
+* `C`, `D` - Engine RPM
     (21, 74) = idle
 
 
@@ -192,7 +192,7 @@ Sends every 20ms:
 
     (255, 240, 255, 0, 255, 255)
 
-*B 
+* `B`
     * 240 - AC LED off
     * 248 - AC LED on
 
@@ -384,11 +384,11 @@ IGN ON:
     * 0 - On
     * 64 - Off
 
-* G
+* `G`
     * 4 - brake off
     * 20 - brake pedal pressed (little bit)
 
-A,B - Speed
+* `A`,`B` - Speed
 
 
 ID 355 - Unknown
@@ -444,14 +444,14 @@ IGN ON:
     (128, 3, 0, 0, 0, 0, 0, 0)
 
 
-C
-    * 0 
+* `C`
+    * 0
     * 64 - wiper pulse
     * 192 - wiper 1 pulse (up)
     * 192 - continuous wiper
     * 224 - fast continuous wiper
 
-E
+* `E`
     * 16 - car stopped
     * 64 - car moving
     * ?? - brake pressed
@@ -540,6 +540,7 @@ IGN ON:
     * 2 - Cruise control master off
     * 82 - Cruise control master on
 
+
 ID 580 - Unknown
 ----------------
 
@@ -562,6 +563,7 @@ IGN ON:
 * `A, B` - Engine RPM
     * (0, 130) = idle (~600rpm)
 
+
 ID 5C5 - Unknown
 ----------------
 
@@ -580,6 +582,7 @@ IGN ON:
 * `A` - Parking Brake
     * 68 - On
     * 64 - Off
+
 
 ID 60D - Body Control Module
 ----------------------------
