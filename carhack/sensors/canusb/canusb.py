@@ -12,10 +12,12 @@ class CanUsb(carhack.sensors.Sensor):
     # self.obd2 = OBD2Scanner(self)
 
   def read_callback(self, frame):
-
     ioloop.add_callback(lambda:self.publish(
       'can.%03x' % frame.id,
       frame.timestamp, frame.tojson()))
+
+  def close(self):
+    self.canusb = None
 
 
 class OBD2Scanner(object):

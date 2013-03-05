@@ -31,6 +31,9 @@ class Processor(object):
     name = '%s.%s' % (self.name, name)
     self.publisher.publish(name, timestamp, value)
 
+  def close(self):
+    pass
+
 
 def subscribe(series):
   def decorator(func):

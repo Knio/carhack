@@ -7,6 +7,9 @@ class Sensor(object):
     name = '%s.%s' % (self.name, name)
     app.live_trip.publish(name, timestamp, value)
 
+  def close(self):
+    pass
+
 
 def get_sensor(name):
   carapp = __import__('carhack.sensors.%s' % name, globals(), level=0)

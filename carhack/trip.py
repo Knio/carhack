@@ -175,6 +175,8 @@ class LoggedTrip(Trip):
         pub.fire(name, ts, value)
 
     finally:
+      for processor in self.processors.itervalues():
+        processor.close()
       for series in self.series.itervalues():
         series.close()
       self.write_manifest()
@@ -197,8 +199,13 @@ class LiveTrip(Trip, Publisher):
     self.ts_end = time.time()
     self.config['time_interval'] = (self.ts_start, self.ts_end)
     self.write_manifest()
-    for s in self.series.itervalues():
-      s.close()
+
+    for sensor in self.sensors.itervalues():
+      sensor.close()
+    for processor in self.processors.itervalues():
+      processor.close()
+    for series in self.series.itervalues():
+      series.close()
 
   def init_processors(self):
     d2 = self.j('secondary')
