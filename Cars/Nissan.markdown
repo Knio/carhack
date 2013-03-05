@@ -531,20 +531,40 @@ IGN ACC: no data
 
 IGN ON:
 
-    (60, 0, 0, 32, 255, 0, 128, 255) - (repeat for 3s)
-    (A, B, 0, 160, 255, 0, 128, 255) - (repeat)
+    (A, B, C, D, E, F, G, H)
 
 
-* `A` - Sensor data (temp?)
+* `A` - Sensor data - Temp?
+    * Starts at ~60, slowly rises to ~125
 * `B` - Counts up from 0 to 255 (only when engine running)
     * Counts faster at higher RPMs
-
+* `C` - `0x00` / `0` always
+* `D` - Bitfield.
+    * `0xA0` / `160`    - Engine off, ACC?
+    * `0x20` / `32`     - Engine turning on (500ms)
+    * `0x00` / `0`      - Engine turning on (2500ms)
+    * `0x80` / 128`     - Engine running
+    * `0x00` / `0`      - Engine shutting down (2500ms)
+    * `0x20` / `32`     - Engine off
 * `E`
-    * 255 - Cruise control master off
-    * 254 - Cruise control master on
-* `F`
-    * 2 - Cruise control master off
-    * 82 - Cruise control master on
+    * Cruise control set point (Kph), cruise control active
+    * `255` - Cruise control master off
+    * `254` - Cruise control master on, cruise control disengaged
+* `F` - Cruise control status
+    * `0x02` / `2` - Cruise control master off
+    * `0x62` / `82` - Cruise control master on
+    * `0x42` / `66` - Cruise control engaged
+    * No other observed values
+    * `F1` / `0x01` - `0
+    * `F2` / `0x02` - `1`
+    * `F3` / `0x04` - `0`
+    * `F4` / `0x08` - `0`
+    * `F5` / `0x10` - Cruise control active(`0`) / disengaged and master switch on(`1`)
+    * `F6` / `0x20` - `0`
+    * `F7` / `0x40` - Cruise control master switch on(`1`) / off(`0`)
+    * `F8` / `0x80` - `0`
+* `G` - `0x80` / `128` always
+* `H` - `0xFF` / `255` always
 
 
 ID 580 - Unknown
@@ -568,6 +588,11 @@ IGN ON:
 
 * `A, B` - Engine RPM
     * (0, 130) = idle (~600rpm)
+* `C` - `0x40` / `64` always
+* `D` - Unknown. Sensor - jumpy
+    * ~150 to ~200
+* `E` - Sensor data - Temp?
+    * Slowly rises from ~60 to ~110.
 
 
 ID 5C5 - Unknown
@@ -588,6 +613,24 @@ IGN ON:
 * `A` - Parking Brake
     * 68 - On
     * 64 - Off
+    * 128 - Engine off & parking brake on
+    * No other observed values
+    * `A1` / `0x01`
+    * `A2` / `0x02` - Parking brake indicator on(`1`) / off(`0`)
+    * `A3` / `0x04`
+    * `A4` / `0x08`
+    * `A5` / `0x10`
+    * `A6` / `0x30`
+    * `A7` / `0x40` - `1` Always
+    * `A8` / `0x80` - Engine off(`1`) / on(`0`) (not set when ACC)
+* `B` - `0` always
+* `C` - `100` always
+* `D` - Sensor data - Unknown
+    * 96 to 100, very slowly increasing
+* `E` - `0` always
+* `F` - `12` always
+* `G` - `0` always
+* `H` - `127` always
 
 
 ID 60D - Body Control Module
@@ -607,24 +650,26 @@ Sample:
     * `A0` - 0
     * `A1` - Headlights on(1)
     * `A2` - Running lights on(1)
-    * `A3` - 0
+    * `A3`
+        * `1` 6000ms after engine turns on
+        * `0` 1500ms after engine turns off
     * `A4` - Driver door open(1)
     * `A5` - Passenger door open(1)
     * `A6` - 0
     * `A7` - 0
-
-
 * `B` - Turn Signal Status
     * `B0` - 0
-    * `B1` - 1
-    * `B2` - 1
+    * `B1`
+        * 1 ACC(ON?) / IGN
+        * 0 OFF & for 1000ms when engine starting
+    * `B2`
+        * 1 ACC(ON?) / IGN
+        * 0 OFF
     * `B3` - 0
     * `B4` - 0
     * `B5` - Left turn signal active(1)
     * `B6` - Right turn signal active(1)
     * `B7` - 0
-
-
 * `C` - Lock Status
     * `C0` - 0
     * `C1` - 0
@@ -634,10 +679,12 @@ Sample:
     * `C5` - 0
     * `C6` - 0
     * `C7` - 0
-
-
-* `D` - Unknown
+* `D` - 0
     * Pulses 42 when IGN ACC->ON
+* `E` - `0` always
+* `F` - `0` always
+* `G` - `0` always
+* `H` - `0` always
 
 
 ID 625 - Body Control Module
@@ -664,9 +711,10 @@ IGN ON:
     * `A0` - Rear defrost LED on(1)
     * 2 - Idle
     * 4, 6, 8, 10 - Wipers active(?)
-
-
 * `B` - Body
+    * 0 - accelerating hard?
+    * 128 - all other times
+    * Following seems wrong:
     * `A0` - 0
     * `A1` - 0
     * `A2` - 0
@@ -675,6 +723,12 @@ IGN ON:
     * `A5` - Headlights on(1)
     * `A6` - Running lights on(1)
     * `A7` - AC LED on(1)
+* `C` - `255` always
+* `D` - Unknown bitfield
+    * 157 - ACC(ON?)
+    * 29 - 1500ms after engine start
+    * 13 - engine off
+* `E` - Unknown bitfield
 
 
 ID 6E2 - Unknown

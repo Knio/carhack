@@ -10,8 +10,7 @@ from carapp import app
 
 def main():
     app.load_trips()
-    trip = app.trips['2013-03-03_18-00-09']
-
+    trip = app.trips['2013-03-04_16-39-46']
     trip.recalculate()
 
 

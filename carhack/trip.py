@@ -120,10 +120,12 @@ class LoggedTrip(Trip):
     self.processors = {i:None for i in self.config['processors']}
 
     for name, filename in self.config['series'].iteritems():
-      # ns = name.split('.')[0]
-      # if ns not in self.config['sensors']: continue
+      fname = self.j(filename)
+      if not os.path.isfile(fname):
+        log.info('log file %s does not exist - skipping' % fname)
+        continue
       series = loggers.get_logger(name)()
-      series.open(self.j(filename))
+      series.open(fname)
       self.series[name] = series
 
   def recalculate(self):
@@ -132,6 +134,9 @@ class LoggedTrip(Trip):
 
     # delete old logs
     for name, filename in self.config['series'].items():
+      print filename
+      if name not in self.series:
+        continue
       if filename.startswith('secondary'):
         self.series[name].close()
         del self.series[name]
@@ -143,6 +148,7 @@ class LoggedTrip(Trip):
     if not os.path.isdir(d2):
       os.mkdir(d2)
     assert os.listdir(d2) == []
+
     self.write_manifest()
 
     def publish(name, ts, value):
@@ -164,13 +170,14 @@ class LoggedTrip(Trip):
       processor = processors.get_processor(processor_name)(pub)
       self.processors[processor_name] = processor
 
-    for name, (ts, value) in series_reader(self.series):
-      pub.fire(name, ts, value)
+    try:
+      for name, (ts, value) in series_reader(self.series):
+        pub.fire(name, ts, value)
 
-    for series in self.series.itervalues():
-      series.close()
-
-    self.write_manifest()
+    finally:
+      for series in self.series.itervalues():
+        series.close()
+      self.write_manifest()
 
     self.load_logs()
 

@@ -20,10 +20,12 @@ Tested on `Win XP 32bit` (works) and `Win 7 64bit` (works, using 32bit python)
 * Install Python (tested with 2.7) 32bit
     * Install setuptools
     * Install pip
-    * Install tornado
-    * Install decorator
-    * Install greenlet
-    * Install pyy
+    * pip install tornado
+    * pip install decorator
+    * pip install greenlet
+    * pip install pyy
+    * pip install pyserial
+    * pip install pynmea
 
 
 * Install CANUSB FTDI Drivers

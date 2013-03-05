@@ -43,13 +43,13 @@ class Nissan370ZProcessor(Processor):
     self.publish('steering_position', ts, steering_position)
 
   def can_180(self, ts, A, B, C, D, E, F, G, H):
-    rpm = signed_short(A, B)
+    rpm = unsigned_short(A, B)
     throttle_position = percent(F)
     self.publish('rpm_a', ts, rpm)
     self.publish('throttle_pedal_position', ts, throttle_position)
 
   def can_1f9(self, ts, A, B, C, D, E, F, G, H):
-    rpm = signed_short(C, D)
+    rpm = unsigned_short(C, D)
     self.publish('rpm_b', ts, rpm)
 
   def can_215(self, ts, A, B, C, D, E, F):
@@ -61,12 +61,12 @@ class Nissan370ZProcessor(Processor):
     self.publish('clutch_pedal_to_floor_a', ts, clutch_pedal_to_floor)
 
   def can_280(self, ts, A, B, C, D, E, F, G, H):
-    vehicle_speed = unsigned_short(E, F)
-    self.publish('vehicle_speed_a', ts, vehicle_speed)
+    vehicle_speed = unsigned_short(E, F) / 100.
+    self.publish('vehicle_speed', ts, vehicle_speed)
 
   def can_351(self, ts, A, B, C, D, E, F, G, H):
     clutch_pedal_pressed = bit(H & 0x04)
-    self.publish('clutch_pedal_pressed', ts, clutch_pedal_to_floor)
+    self.publish('clutch_pedal_pressed', ts, clutch_pedal_pressed)
 
   def can_354(self, ts, A, B, C, D, E, F, G, H):
     tcs_indicator = bit(E & 0x80)
@@ -101,16 +101,21 @@ class Nissan370ZProcessor(Processor):
     self.publish('6mt', ts, gear)
 
   def can_551(self, ts, A, B, C, D, E, F, G, H):
-    sensor = A
+    temp_sensor_a = A
     engine_revolutions = B
 
-    # crusie_control_master_a = bit(E & 0x01)
-    crusie_control_master_b = bit(F & 0x50)
+    cruise_control_master_switch = bit(F & 0x50)
+    cruise_control_engaged = bit(cruise_control_master_switch and not (F & 0x10))
+    cruise_control_speed = {255: -1, 254: 0}.get(E, E)
 
-    self.publish('unknown_sensor_551_a', ts, sensor)
+    cruise_control_status = {2:0, 82:1, 66:2}.get(F, F)
+
+    self.publish('temp_sensor_a', ts, temp_sensor_a)
     self.publish('engine_revolutions', ts, engine_revolutions)
-    # self.publish('crusie_control_master_a', ts, crusie_control_master_a)
-    self.publish('crusie_control_master_b', ts, crusie_control_master_b)
+    # self.publish('cruise_control_master_switch', ts, cruise_control_master_switch)
+    # self.publish('cruise_control_engaged', ts, cruise_control_engaged)
+    self.publish('cruise_control_status', ts, cruise_control_status)
+    self.publish('cruise_control_speed', ts, cruise_control_speed)
 
   def can_580(self, ts, A, B, C, D, E):
     throtle_body_position = unsigned_short(A, B)

@@ -9,6 +9,7 @@ class CanUsb(carhack.sensors.Sensor):
   def __init__(self, name=None, bitrate='500', flags=None):
     import pycanusb
     self.canusb = pycanusb.open(name, bitrate, flags, self.read_callback)
+    # self.obd2 = OBD2Scanner(self)
 
   def read_callback(self, frame):
 
@@ -17,16 +18,6 @@ class CanUsb(carhack.sensors.Sensor):
       frame.timestamp, frame.tojson()))
 
 
-# import pycanusb.Frame
-# class CanUSBLog(log.TimeSeriesStruct):
-#   name_pattern = 'can.[0-9a-f]{3}$'
-#   item_format = pycanusb.Frame.format
-#   item_size = struct.calcsize(item_format)
-
-#   def from_object(frame):
-#     return frame.tostring()
-
-#   def from_string(string):
-#     return Frame(string)
-
-
+class OBD2Scanner(object):
+  def __init__(self, canusb):
+    pass
