@@ -5,9 +5,9 @@ import json
 import shutil
 from collections import defaultdict
 
-import loggers
-import sensors
-import processors
+from carhack import loggers
+from carhack import sensors
+from carhack import processors
 
 CONFIG_NAME = 'LOG_CONFIG'
 
@@ -83,6 +83,9 @@ class Trip(object):
       filename = os.path.join(path, '%s.dat' % name)
       series.open(self.j(filename))
       self.series[name] = series
+      # TODO
+      # don't just log name->filename
+      # log name->{filenames:[], processor/sensor:X, logger_type:X}
       self.config['series'][name] = normpath(filename)
     self.series[name].append(ts, value)
 
@@ -143,7 +146,6 @@ class LoggedTrip(Trip):
         del self.config['series'][name]
         os.remove(self.j(filename))
 
-
     d2 = self.j('secondary')
     if not os.path.isdir(d2):
       os.mkdir(d2)
@@ -172,6 +174,8 @@ class LoggedTrip(Trip):
 
     try:
       for name, (ts, value) in series_reader(self.series):
+        if not name.startswith('canusb'):
+          log.debug("%10.3f %s %r" % (ts, name, value))
         pub.fire(name, ts, value)
 
     finally:

@@ -5,7 +5,7 @@ import ConfigParser
 
 import tornado.ioloop
 
-import web
+from carhack import web
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('carapp')
@@ -46,12 +46,18 @@ class CarApp(Singleton):
     web.init(self)
     web.server.start()
 
+  def get_trip(self, tid):
+    if tid not in self.trips:
+      path = os.path.join(self.data_path, tid)
+      if not os.path.isfile(os.path.join(path, trip.CONFIG_NAME)):
+        raise KeyError
+      logged_trip = trip.LoggedTrip(tid, path)
+      self.trips[tid] = logged_trip
+    return self.trips[tid]
+
   def load_trips(self):
     for tid in os.listdir(self.data_path):
-      path = os.path.join(self.data_path, tid)
-      if os.path.isfile(os.path.join(path, trip.CONFIG_NAME)):
-        logged_trip = trip.LoggedTrip(tid, path)
-        self.trips[tid] = logged_trip
+      self.get_trip(tid)
 
   def run(self):
     self.load_trips()
