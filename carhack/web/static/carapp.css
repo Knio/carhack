@@ -38,6 +38,12 @@ div.trip {
     margin: 5px;
 }
 
+div.map {
+  width: 600px;
+  height: 300px;
+  position: relative;
+}
+
 div.charts {
 
 }
@@ -71,3 +77,5 @@ div.row.show > div:first-child > a:first-child {
 div.row.hide > div:first-child > a:nth-child(2) {
     display: none;
 }
+
+

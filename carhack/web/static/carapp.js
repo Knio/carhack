@@ -185,10 +185,21 @@ U.mix(TripUI.prototype, {
       t.live ?
         nice_date(t.date_start) + ' - Now' :
         div(nice_date_and_duration(t.date_start, t.date_end)),
-      // t.live ? null : a({href:'#', onclick:this.recalculate, context:this},
-      //   '[recalculate data]'),
+      this.map = div(),
       this.charts = div({class:'charts'})
     );
+
+    var gps_track = 'nmea_proc.gps.position'
+
+    if (this.trip.series.indexOf(gps_track) !== -1) {
+      this.map.className = 'map';
+
+      var url = '/api/trip/%(tid)s/%s/range/%(ts_start)s/%(ts_end)s';
+      pyy.io.get(U.format(url, gps_track, this.trip), function(text) {
+        gps_data = U.json(text);
+        var bing_map = make_map(this.map, gps_data, this.view);
+      }, this)
+    }
 
     var axis_container
     this.charts.appendChild(div({class:'row time'},
@@ -224,6 +235,14 @@ U.mix(TripUI.prototype, {
   }
 });
 
+
+scalar_data = [
+  /^nissan_370z\./,
+  /^test/,
+  /^nmea_proc.gps.speed_over_ground/,
+  /^nmea_proc.gps.direction/,
+  /^nmea_proc.gps.altitude/,
+];
 
 function RawRow(trip, ui, view, name) {
 
@@ -288,18 +307,16 @@ function RawRow(trip, ui, view, name) {
             this.data['ABCDEFGH'.charAt(i)].append(ts, value.data[i]);
           }
         }
-        else if (/^test/.test(name)) {
+        else if (U.foreach(scalar_data, function(r) {
+          if (r.test(name)) return true})) {
+
           var ts = ts * 1000;
           this.data['A'].append(ts, value);
         }
-        else if (/^nissan_370z/.test(name)) {
-          var ts = ts * 1000;
-          this.data['A'].append(ts, value);
-        }
+
         else {
           throw "unknown data format";
         }
-
 
         if (ts < view.end) {
           view.update();
@@ -322,12 +339,9 @@ function RawRow(trip, ui, view, name) {
       }
     }
 
-    else if (/^test/.test(name)) {
-      for (var j = 0; j < json.length; j++) { json[j][0] *= 1000; }
-      data['A'] = new plok.data(json);
-    }
+    else if (U.foreach(scalar_data, function(r) {
+      if (r.test(name)) return true})) {
 
-    else if (/^nissan_370z/.test(name)) {
       for (var j = 0; j < json.length; j++) { json[j][0] *= 1000; }
       data['A'] = new plok.data(json);
     }

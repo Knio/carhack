@@ -13,9 +13,12 @@ class CarAppPage(pyy.html.document):
     self.head += script(src='/assets/plok.js')
     self.head += script(src='/assets/moment.min.js')
 
+    self.head += script(src='http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0')
+
     self.head += link(rel='stylesheet', href='/static/carapp.css', type='text/css')
 
     self.head += script(src='/static/carapp.js')
+    self.head += script(src='/static/map.js')
 
     with self:
       with div():
