@@ -4,6 +4,14 @@ CarHack
 Car Computer project to interface with a car over CAN-BUS.
 
 
+Related products
+----------------
+
+* OpenXC http://openxcplatform.com/
+* RaceLogic
+
+
+
 CANUSB
 ------
 

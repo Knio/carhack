@@ -39,7 +39,7 @@ div.trip {
 }
 
 div.map {
-  width: 600px;
+  /*width: 600px;*/
   height: 300px;
   position: relative;
 }

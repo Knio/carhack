@@ -23,3 +23,5 @@ class CanUsb(carhack.sensors.Sensor):
 class OBD2Scanner(object):
   def __init__(self, canusb):
     pass
+
+

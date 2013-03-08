@@ -9,6 +9,7 @@ class NMEASentence(object):
 
     class __metaclass__(type):
         def __init__(cls, name, bases, dict):
+            type.__init__(cls, name, bases, dict)
             if 'NMEASentence' in [b.__name__ for b in bases]:
                 sentence_type = name.replace('Sentence', '')
                 NMEASentence._sentence_types[name] = cls
@@ -298,6 +299,22 @@ class GGA(NMEASentence, LatLonFix):
         ('Differential Reference Station ID', 'ref_station_id')
     )
 
+class GNS(NMEASentence, LatLonFix):
+    fields = (
+        ('Timestamp', 'timestamp', timestamp),
+        ('Latitude', 'lat'),
+        ('Latitude Direction', 'lat_dir'),
+        ('Longitude', 'lon'),
+        ('Longitude Direction', 'lon_dir'),
+        ('Mode indicator', 'mode_inticator'),
+        ('Total number of satelites in use', 'num_sats'),
+        ('HDROP', 'hdop'),
+        ('Antenna altitude, meters', 'altitude'),
+        ('Goeidal separation meters', 'geo_sep'),
+        ('Age of diferential data', 'age_gps_data'),
+        ('Differential reference station ID', 'diferential')
+    )
+
 class BWW(NMEASentence):
     """ Bearing, Waypoint to Waypoint
     """
@@ -464,8 +481,8 @@ class RMC(NMEASentence, LatLonFix):
         ("Latitude Direction", "lat_dir"),
         ("Longitude", "lon"),
         ("Longitude Direction", "lon_dir"),
-        ("Speed Over Ground", "spd_over_grnd"),
-        ("True Course", "true_course"),
+        ("Speed Over Ground", "spd_over_grnd", float),
+        ("True Course", "true_course", float),
         ("Datestamp", "datestamp"),
         ("Magnetic Variation", "mag_variation"),
         ("Magnetic Variation Direction", "mag_var_dir")

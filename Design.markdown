@@ -2,6 +2,16 @@ Carhack Design
 ==============
 
 
+
+TODO
+----
+
+* get rid of SQLite for logging
+* OBD2 module
+* Refactor JS
+* Visualizations
+
+
 Features
 --------
 
