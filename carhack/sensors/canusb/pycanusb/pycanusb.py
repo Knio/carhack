@@ -717,7 +717,7 @@ def main():
 
     except KeyboardInterrupt:
         print('Writing log %s' % fname)
-        pickle.dump(frames, open(fname, 'wb'), -1)
+        pickle.dump(frames, file(fname, 'wb'), -1)
 
 if __name__ == "__main__":
     main()
