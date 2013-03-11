@@ -1,33 +1,40 @@
+import os
 import mmap
 import time
 import struct
 from collections import OrderedDict
 
-import time_series
+from carhack.loggers import TimeSeriesInterface
 
-class StructTimeSeries(time_series.TimeSeriesInterface):
+class StructLog(TimeSeriesInterface):
   '''
   On-disk array of struct objects.
   Abstract class. Concrete classes must implement:
 
   * item_size
-  * from_string
-  * from_object
+  * encode
+  * decode
 
   '''
   def __init__(self):
-    super(StructTimeSeries, self).__init__()
+    self.file = None
+    super(StructLog, self).__init__()
     self.format = '@d%ds' % self.item_size
     self.size = struct.calcsize(self.format)
 
-  def from_bytes(self, bytes):
+  def decode(self, bytes):
     raise NotImplementedError
 
-  def from_object(self, obj):
+  def encode(self, obj):
     raise NotImplementedError
 
-  def open(self, fname):
-    self.file = open(fname, 'a+b')
+  def files(self):
+    return [self.fname]
+
+  def open(self, basename, fname):
+    self.fname = fname
+    fullname = os.path.join(basename, fname)
+    self.file = open(fullname, 'a+b')
     self.file.seek(0, 2)
     l = self.file.tell()
     self.file_len = l / self.size
@@ -48,7 +55,7 @@ class StructTimeSeries(time_series.TimeSeriesInterface):
     ts, bytes = struct.unpack_from(
       self.format, self.map, index * self.size)
 
-    return ts, self.from_bytes(bytes)
+    return ts, self.decode(bytes)
 
   def get(self, i):
     if i >= self.file_len:
@@ -64,7 +71,7 @@ class StructTimeSeries(time_series.TimeSeriesInterface):
     if len(self.buffer):
       self.map.resize((self.file_len + len(self.buffer)) * self.size)
     for timestamp, obj in self.buffer:
-      data = self.from_object(obj)
+      data = self.encode(obj)
       struct.pack_into(self.format,
         self.map, (self.file_len * self.size),
         timestamp, data)
@@ -102,7 +109,8 @@ class StructTimeSeries(time_series.TimeSeriesInterface):
 
     return s
 
-  def get_range(self, begin_ts, end_ts=1e10):
+  def get_range(self, begin_ts, end_ts=None):
+    end_ts = end_ts or 1e10
     s = self.find_index(begin_ts)
     rows = []
     while s < len(self):
@@ -127,17 +135,59 @@ class StructTimeSeries(time_series.TimeSeriesInterface):
       self.file = None
 
 
+class CANLog(StructLog):
+  can_struct = struct.Struct('!dHBB8B')
+  item_size = can_struct.size
+
+  def encode(self, can):
+    data = [0] * 8
+    d = can['data']
+    data[0:len(d)] = d
+    return self.can_struct.pack(
+      can['timestamp'],
+      can['id'],
+      can['flags'],
+      can['len'],
+      *data)
+
+  def decode(self, bytes):
+    d = self.can_struct.unpack(bytes)
+    return {
+      'timestamp':  d[0],
+      'id':         d[1],
+      'flags':      d[2],
+      'len':        d[3],
+      'data':       d[4:4+d[3]],
+    }
+
+
+class ScalarLog(StructLog):
+  def encode(self, obj):
+    return struct.pack(self.item, obj)
+  def decode(self, bytes):
+    return struct.unpack(self.item, bytes)[0]
+
+class DoubleLog(ScalarLog):
+  item = '!d'
+  item_size = struct.calcsize(item)
+
+
+class IntLog(ScalarLog):
+  item = '!q'
+  item_size = struct.calcsize(item)
+
+
 def test():
   s = struct.Struct('!H')
 
-  class TestStructTimeSeries(StructTimeSeries):
+  class TestStructTimeSeries(StructLog):
     name_pattern = '$^'
     item_size = s.size
 
-    def from_object(self, obj):
+    def encode(self, obj):
       return s.pack(obj)
 
-    def from_bytes(self, string):
+    def decode(self, string):
       return s.unpack(string)[0]
 
   time_series.test(TestStructTimeSeries, iter(xrange(50, 100)))

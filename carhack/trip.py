@@ -34,7 +34,7 @@ class Trip(object):
   def __init__(self, tid, path, name=None):
     super(Trip, self).__init__()
     self.tid = tid
-    self.path = path
+    self.path = normpath(path)
     self.name = name or tid
 
     self.ts_start = 0
@@ -72,21 +72,21 @@ class Trip(object):
 
   def write_series(self, name, ts, value):
     if not name in self.series:
-      series = loggers.get_logger(name)()
+      series = loggers.guess_logger(name, value)()
       ns = name.split('.')[0]
       if ns in self.sensors:
-        path = 'primary'
+        series_type = 'primary'
       elif ns in self.processors:
-        path = 'secondary'
+        series_type = 'secondary'
       else:
         raise Exception
-      filename = os.path.join(path, '%s.dat' % name)
-      series.open(self.j(filename))
+      fname = os.path.join(series_type, '%s.dat' % name)
+      series.open(self.path, normpath(fname))
       self.series[name] = series
-      # TODO
-      # don't just log name->filename
-      # log name->{filenames:[], processor/sensor:X, logger_type:X}
-      self.config['series'][name] = normpath(filename)
+      manifest = series.manifest()
+      manifest['series_type'] = series_type
+      self.config['series'][name] = manifest
+
     self.series[name].append(ts, value)
 
 
@@ -122,13 +122,13 @@ class LoggedTrip(Trip):
     self.sensors = {i:None for i in self.config['sensors']}
     self.processors = {i:None for i in self.config['processors']}
 
-    for name, filename in self.config['series'].iteritems():
-      fname = self.j(filename)
-      if not os.path.isfile(fname):
-        log.info('log file %s does not exist - skipping' % fname)
+    for name, config in self.config['series'].iteritems():
+      series = loggers.get_logger_by_name(config['logger_name'])()
+      fname = config['fname']
+      if not all(os.path.isfile(self.j(f)) for f in config['files']):
+        log.info('log file missing - skipping log %s' % fname)
         continue
-      series = loggers.get_logger(name)()
-      series.open(fname)
+      series.open(self.path, normpath(fname))
       self.series[name] = series
 
   def recalculate(self):
@@ -136,15 +136,17 @@ class LoggedTrip(Trip):
     pub = Publisher()
 
     # delete old logs
-    for name, filename in self.config['series'].items():
-      print filename
-      if name not in self.series:
-        continue
-      if filename.startswith('secondary'):
+    for name, config in self.config['series'].items():
+      if config['series_type'] != 'secondary': continue
+      if name in self.series:
         self.series[name].close()
         del self.series[name]
-        del self.config['series'][name]
-        os.remove(self.j(filename))
+
+      for i in config['files']:
+        p = self.j(i)
+        if os.path.exists(p):
+          os.remove(p)
+      del self.config['series'][name]
 
     d2 = self.j('secondary')
     if not os.path.isdir(d2):
@@ -236,7 +238,8 @@ class LiveTrip(Trip, Publisher):
     self.config['sensors'] = sensor_names
     for name in sensor_names:
       log.info('Loading sensor %s' % name)
-      sensor = sensors.get_sensor(name)()
+      config = dict(app.config.items(name))
+      sensor = sensors.get_sensor(name)(**config)
       self.sensors[name] = sensor
 
   def publish(self, name, ts, value):

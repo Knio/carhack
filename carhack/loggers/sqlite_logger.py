@@ -2,18 +2,20 @@ import os
 import pickle
 import sqlite3
 
-import time_series
+from carhack.loggers import TimeSeriesInterface
 
-class SQLiteTimeSeries(time_series.TimeSeriesInterface):
+class SQLiteLog(TimeSeriesInterface):
     name_pattern = '.*'
 
     def __init__(self):
-        super(SQLiteTimeSeries, self).__init__()
+        super(SQLiteLog, self).__init__()
         self.conn = None
 
-    def open(self, filename):
-        exists = os.path.isfile(filename) and os.path.getsize(filename) != 0
-        self.conn = sqlite3.connect(filename)
+    def open(self, basename, fname):
+        self.fname = fname
+        fullname = os.path.join(basename, fname)
+        exists = os.path.isfile(fullname) and os.path.getsize(fullname) != 0
+        self.conn = sqlite3.connect(fullname)
         self.curs = self.conn.cursor()
         if not exists:
             self.create()
@@ -21,6 +23,9 @@ class SQLiteTimeSeries(time_series.TimeSeriesInterface):
         else:
             self.curs.execute('''SELECT count(*) FROM data''')
             self.size = self.curs.fetchone()[0]
+
+    def files(self):
+        return [self.fname]
 
     def __len__(self):
         return self.size
@@ -75,7 +80,7 @@ class SQLiteTimeSeries(time_series.TimeSeriesInterface):
 
 
 def test():
-    time_series.test(SQLiteTimeSeries, iter(xrange(50, 100)))
+    time_series.test(SQLiteLog, iter(xrange(50, 100)))
 
 
 if __name__ == '__main__':
