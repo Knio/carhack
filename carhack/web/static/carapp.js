@@ -238,6 +238,7 @@ U.mix(TripUI.prototype, {
 
 scalar_data = [
   /^nissan_370z\./,
+  /^hyundai_sonata\./,
   /^test/,
   /^nmea_proc.gps.speed_over_ground/,
   /^nmea_proc.gps.direction/,

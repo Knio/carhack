@@ -162,10 +162,7 @@ class CANUsbStatistics(Structure):
 #       absolute security is needed it is best if the CAN control and handling
 #       code is on one thread and the adapter detection on an other tread/process.
 def getAdapters():
-    try:
-        dll = WinDLL("canusbdrv.dll")
-    except Exception:
-        return False
+    dll = WinDLL("canusbdrv.dll")
     buf = create_string_buffer(35)
     f1 = dll.canusb_getFirstAdapter
     f2 = dll.canusb_getNextAdapter
@@ -315,8 +312,10 @@ class CanUSB(object):
 
 
     def __del__(self):
-        self.__canusb_Close(self.__handle)
+        self.close()
 
+    def close(self):
+        return self.__canusb_Close(self.__handle)
 
     ##
     # Read message from channel.
@@ -405,6 +404,8 @@ class CanUSB(object):
 
     @staticmethod
     def statusText(status, sep=' | '):
+        if status == ERROR_TIMEOUT:
+            return 'Timeout'
         l = []
         if status & STATUS_RECEIVE_FIFO_FULL:
             l.append("Receive Fifo Full")
@@ -622,6 +623,7 @@ def open(name=None, bitrate=None, flags=None, callback=None):
             s = adapter.status()
             if s != 0:
                 log.info('Error opening adapter: %s' % adapter.statusText(s))
+                adapter.close()
                 continue
 
             if callback:
@@ -630,11 +632,12 @@ def open(name=None, bitrate=None, flags=None, callback=None):
             else:
                 read_block(adapter.read())
 
+
             num_frames[0] = 0
             now = time.time()
             # see if we read anything, 10s timeout
             while time.time() < now + 10:
-                if num_frames:
+                if True or num_frames[0]:
                     log.info('Connected!')
 
                     if callback:
@@ -677,18 +680,24 @@ def open(name=None, bitrate=None, flags=None, callback=None):
                 s = adapter.status()
                 if s != 0:
                     log.info('Error opening adapter: %s' % adapter.statusText(s))
+                    adapter.close()
                     continue
 
     raise Exception('No working adapters found')
 
 
 def main():
+    import cgitb
+    cgitb.enable(format='text')
+    logging.basicConfig(level=logging.DEBUG)
+    import pickle
+
     frames = []
     def read(frame):
         print frame
         frames.append(frame)
 
-    adapter = connect(
+    adapter = open(
         bitrate='500',
         # flags = FLAG_QUEUE_REPLACE | FLAG_TIMESTAMP | FLAG_BLOCK
         callback=read,
@@ -697,19 +706,18 @@ def main():
     fname = 'pycanusb.%s.log' % time.strftime('%Y-%m-%d.%H.%M.%S')
     try:
         while 1:
-            msg = adapter.read()
-            frame = Frame(msg)
-            frame.timestamp = time.time()
-            frames.append(frame)
-            print frame
-            # s = adapter.status()
-            # print 'Status:', adapter.statusText(s)
-            # time.sleep(0)
+            # msg = adapter.read()
+            # frame = Frame(msg)
+            # frames.append(frame)
+            # print frame
+            s = adapter.status()
+            print 'Status:', adapter.statusText(s)
+            time.sleep(1)
             pass
 
     except KeyboardInterrupt:
         print('Writing log %s' % fname)
-        pickle.dump(frames, open(fname, 'wb'), -1)
+        pickle.dump(frames, file(fname, 'wb'), -1)
 
 if __name__ == "__main__":
     main()
