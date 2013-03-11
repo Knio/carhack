@@ -119,6 +119,7 @@ class xC0(PID):
     name = 'PIDs supported [C1 - E0]'
     value = supported
 
+
 class x01(PID):
     name = 'Monitor Status'
     # TODO
@@ -303,11 +304,6 @@ class x1F(PID):
     name = 'Run time since engine start (seconds)'
     value = short
 
-class x20(PID):
-    name = 'PIDs supported [21 - 40]'
-    # TODO
-
-
 class x21(PID):
     name = 'Distance traveled with malfunction indicator lamp (MIL) on (km)'
     value = prop(short)
@@ -450,9 +446,6 @@ class x3F(PID):
 
 
 ###############################################################################
-class x40(PID):
-    name = 'PIDs supported [41 - 60]'
-    # TODO
 
 class x41(PID):
     '''
@@ -674,9 +667,6 @@ class x51(PID):
     # (0x5F, 1, 'Emission requirements to which vehicle is designed',     '',     '',     '',     'Bit Encoded'),
 
 ###############################################################################
-class x60(PID):
-    name = 'PIDs supported [61 - 80]'
-    # TODO
 
     # (0x61, 1, 'Drivers demand engine - percent torque',     '-125',     '125',     ' %',     'A-125'),
 
@@ -743,10 +733,6 @@ class x66(PID):
 
     # (0x7F,13, 'Engine run time',     '',     '',     '',     ''),
 
-class x80(PID):
-    name = 'PIDs supported [81 - A0]'
-    # TODO
-
     # (0x81,21, 'Engine run time for Auxiliary Emissions Control Device(AECD)',     '',     '',     '',     ''),
 
     # (0x82,21, 'Engine run time for Auxiliary Emissions Control Device(AECD)',     '',     '',     '',     ''),
@@ -760,11 +746,3 @@ class x80(PID):
     # (0x86, 0, 'Particulate matter (PM) sensor',     '',     '',     '',     ''),
 
     # (0x87, 0, 'Intake manifold absolute pressure',     '',     '',     '',     ''),
-
-class xA0(PID):
-    name = 'PIDs supported [A1 - C0]'
-    # TODO
-
-class xC0(PID):
-    name = 'PIDs supported [C1 - E0]'
-    # TODO
