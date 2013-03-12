@@ -21,8 +21,8 @@ make_map = function(dom, track, view) {
     return new Microsoft.Maps.Location(x[1][0], x[1][1]);
   });
 
-  var = options = U.mix({}, map_options);
-  options.bounds: Microsoft.Maps.LocationRect.fromLocations(locations)
+  var options = U.mix({}, map_options);
+  options.bounds = Microsoft.Maps.LocationRect.fromLocations(locations)
 
   var map = new Microsoft.Maps.Map(dom, options);
   var polyline = new Microsoft.Maps.Polyline(locations);

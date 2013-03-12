@@ -52,7 +52,7 @@ div.row {
 }
 div.row > div:first-child {
     float: right;
-    width: 400px;
+    width: 450px;
 }
 div.row > div:first-child > a {
     float: right;
@@ -60,7 +60,7 @@ div.row > div:first-child > a {
 
 div.row > div:last-child {
     /*height: 100px;*/
-    margin-right: 400px;
+    margin-right: 450px;
 }
 div.row > div:last-child > div {
     height: 100px;

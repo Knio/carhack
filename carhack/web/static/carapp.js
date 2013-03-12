@@ -240,9 +240,10 @@ scalar_data = [
   /^nissan_370z\./,
   /^hyundai_sonata\./,
   /^test/,
-  /^nmea_proc.gps.speed_over_ground/,
-  /^nmea_proc.gps.direction/,
-  /^nmea_proc.gps.altitude/,
+  /^nmea_proc\.gps\.speed_over_ground/,
+  /^nmea_proc\.gps\.direction/,
+  /^nmea_proc\.gps\.altitude/,
+  /^obd2_proc\.obd2\./,
 ];
 
 function RawRow(trip, ui, view, name) {

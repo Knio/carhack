@@ -54,15 +54,17 @@ class PID(object):
 
     def __getattr__(self, name):
         try:
-            i = tuple('abcd').index(name)
+            i = tuple('abcde').index(name)
             return self.bytes[i]
-        except:
+        except ValueError:
             raise AttributeError
 
     def __repr__(self):
-        return '<PID %02X [%s] %s>' % (
-            self.pid, self.name, getattr(self, 'value', repr(self.bytes)))
+        return '<PID %02X [%s] %s>' % (self.pid, self.name, self.value)
 
+    @property
+    def value(self):
+        return self.bytes
 
 def prop(func):
     @property
@@ -154,7 +156,7 @@ class x04(PID):
     of engine LOAD
     '''
     name = 'Calculated engine load value (%)'
-    # value = prop(percent)
+    value = prop(percent)
 
 class x05(PID):
     name = 'Engine coolant temperature (C)'
@@ -340,7 +342,26 @@ class x26(PID):
 
 class x27(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 1, Sensor 4'
-    value = prop(o2_eq_ratio_and_voltage)
+    value = prop(signed_percent)
+
+class x2E(PID):
+    '''
+    Commanded evaporative purge control valve displayed as a percent.
+    EVAP_PCT shall be normalized to the maximum EVAP purge commanded output
+    control parameter. If an on/off solenoid is used, EVAP_PCT shall
+    display 0 % when purge is commanded off, 100 % when purge is commanded on.
+    If a vacuum solenoid is duty-cycled, the EVAP purge valve duty cycle
+    from 0 to 100 % shall be displayed. If a linear or stepper motor valve is
+    used, the fully closed position shall be displayed as 0 %, and the fully
+    open position shall be displayed as 100 %. Intermediate positions shall be
+    displayed as a percent of the full-open position. For example, a
+    stepper-motor EVAP purge valve that moves from 0 to 128 counts shall
+    display 0 % at 0 counts, 100 % at 128 counts and 50 % at 64 counts.
+    Any other actuation method shall be normalized to display 0 % when no purge
+    is commanded and 100 % at the maximum commanded purge position/flow.
+    '''
+    name = 'Commanded evaporative purge (%)'
+    value = prop(percent)
 
 class x28(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 2, Sensor 1'
@@ -364,10 +385,6 @@ class x2C(PID):
 
 class x2D(PID):
     name = 'EGR Error (%)'
-    value = prop(signed_percent)
-
-class x2E(PID):
-    name = 'Commanded evaporative purge (%)'
     value = prop(percent)
 
 class x2F(PID):
@@ -684,6 +701,16 @@ class x51(PID):
 
 class x66(PID):
     name = 'Mass air flow sensor'
+    @property
+    def value(self):
+        maf = []
+        if self.a & 0x01:
+            maf.append(short(self.b, self.c))
+        if self.a & 0x02:
+            maf.append(short(self.d, self.e))
+        return maf
+
+
     # TODO
 
     # (0x67, 3, 'Engine coolant temperature',     '',     '',     '',     ''),

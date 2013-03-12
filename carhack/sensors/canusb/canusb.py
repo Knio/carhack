@@ -131,5 +131,5 @@ class OBD2Scanner(object):
         current.parent.switch()
       for p in self.supported_pids:
         frame = self.query_block(1, p)
-        print frame
+        # print frame
 
