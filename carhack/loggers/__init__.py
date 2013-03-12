@@ -69,7 +69,7 @@ def guess_logger(series_name, example):
     return DoubleLog
 
   # really slow and inefficient
-  return SQLiteLogger
+  return SQLiteLog
 
 
 

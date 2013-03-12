@@ -20,7 +20,7 @@ class obd2_can_request(object):
         self.bytes = [2, mode, pid, 0x55, 0x55, 0x55, 0x55, 0x55]
 
 class PID(object):
-    def __metaclass__(type):
+    class __metaclass__(type):
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if bases == (object,):
@@ -45,7 +45,8 @@ class PID(object):
         if not cls:
             raise ValueError('Unknown PID %X' % pid)
 
-        obj = pid(mode, *bytes[3:num_bytes+2])
+        obj = cls(mode, *bytes[3:num_bytes+1])
+        return obj
 
     def __init__(self, mode, *bytes):
         self.mode = mode
@@ -59,8 +60,8 @@ class PID(object):
             raise AttributeError
 
     def __repr__(self):
-        return '<PID %2X [%s] %s>' % (
-            self.pid, self.name, getattr(self, 'value', repr(self.data)))
+        return '<PID %02X [%s] %s>' % (
+            self.pid, self.name, getattr(self, 'value', repr(self.bytes)))
 
 
 def prop(func):
@@ -78,21 +79,20 @@ def supported(self):
 def dtc(self):
     return '%c%2X%2X' % (
         'PCBU'[self.a & 0xC0],
-        self.a & ~0xC0)
-        self.b
-    )
+        self.a & ~0xC0,
+        self.b)
 
 def byte(a):
     return a
 
 def percent(a):
-    return 100 * (self.a / 255.)
+    return 100 * (a / 255.)
 
 def signed_percent(a):
-    return 100 * (a - 128) / 128.)
+    return 100 * ((a - 128) / 128.)
 
-def short(self):
-    return (self.a << 8) | self.b
+def short(a, b):
+    return (a << 8) | b
 
 
 class x00(PID):
@@ -104,7 +104,11 @@ class x20(PID):
     value = supported
 
 class x40(PID):
-    name = 'PIDs supported [41 - 80]'
+    name = 'PIDs supported [41 - 60]'
+    value = supported
+
+class x60(PID):
+    name = 'PIDs supported [61 - 80]'
     value = supported
 
 class x80(PID):
@@ -124,7 +128,7 @@ class x01(PID):
     name = 'Monitor Status'
     # TODO
 
-class x02(PID)
+class x02(PID):
     name = 'DTC that caused required freeze frame data storage'
     value = dtc
 
@@ -150,11 +154,11 @@ class x04(PID):
     of engine LOAD
     '''
     name = 'Calculated engine load value (%)'
-    value = prop(percent)
+    # value = prop(percent)
 
 class x05(PID):
     name = 'Engine coolant temperature (C)'
-    value = value(lambda a: a-40.)
+    value = prop(lambda a: a-40.)
 
 # TODO Also bank 3 if two bytes returned
 class x06(PID):
@@ -177,35 +181,35 @@ class x09(PID):
 
 class x0A(PID):
     name = 'Fuel rail pressure (kPa g)'
-    value = value(lambda A: (A*3))
+    value = prop(lambda A: (A*3))
 
 class x0B(PID):
     name = 'Intake manifold absolute pressure (kPa)'
-    value = value(byte)
+    value = prop(byte)
 
 class x0C(PID):
     name = 'Engine RPM'
-    value = value(lambda a,b: ((short(a,b)/4.)
+    value = prop(lambda a,b: short(a,b)/4.)
 
 class x0D(PID):
     name = 'Vehicle speed (km/h)'
-    value = value(byte)
+    value = prop(byte)
 
 class x0E(PID):
     name = 'Timing advance (degrees relative to #1 cylinder)'
-    value = value(lambda A: (A/2. - 64))
+    value = prop(lambda A: (A/2. - 64))
 
 class x0F(PID):
     name = 'Intake air temperature (C)'
-    value = value(lambda A: (A-40))
+    value = prop(lambda A: (A-40.))
 
 class x10(PID):
     name = 'MAF mass air flow rate (g/sec)'
-    value = value(lambda A,B: short(A, B) / 100)
+    value = prop(lambda A,B: short(A, B) / 100.)
 
 class x11(PID):
     name = 'Absolute throttle position (%)'
-    value = value(percent)
+    value = prop(percent)
 
 class x12(PID):
     '''
@@ -240,35 +244,35 @@ def o2_voltage_and_stft(a, b):
 
 class x14(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 1, Sensor 1'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x15(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 1, Sensor 2'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x16(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 1, Sensor 3'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x17(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 1, Sensor 4'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x18(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 2, Sensor 1'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x19(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 2, Sensor 2'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x1A(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 2, Sensor 3'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 class x1B(PID):
     name = 'Oxygen sensor voltage, Short term fuel trim - Bank 2, Sensor 4'
-    value = value(o2_voltage_and_stft)
+    value = prop(o2_voltage_and_stft)
 
 
 class x1C(PID):
@@ -302,7 +306,7 @@ class x1E(PID):
 
 class x1F(PID):
     name = 'Run time since engine start (seconds)'
-    value = short
+    value = prop(short)
 
 class x21(PID):
     name = 'Distance traveled with malfunction indicator lamp (MIL) on (km)'
@@ -310,11 +314,11 @@ class x21(PID):
 
 class x22(PID):
     name = 'Fuel rail pressure (relative to manifold vacuum) (kPa)'
-    value = value(lambda A,B: short(A, B) * 0.079))
+    value = prop(lambda A,B: short(A, B) * 0.079)
 
 class x23(PID):
     name = 'Fuel rail pressure (kPa g)'
-    value = value(lambda A,B: short(A,B) * 10)
+    value = prop(lambda A,B: short(A,B) * 10)
 
 
 def o2_eq_ratio_and_voltage(a, b, c, d):
@@ -324,35 +328,35 @@ def o2_eq_ratio_and_voltage(a, b, c, d):
 # If PID 0x1D is supported instead, they have different meanings. :()
 class x24(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 1, Sensor 1'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x25(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 1, Sensor 2'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x26(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 1, Sensor 3'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x27(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 1, Sensor 4'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x28(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 2, Sensor 1'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x29(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 2, Sensor 2'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x2A(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 2, Sensor 3'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x2B(PID):
     name = 'Wide range oxygen sensor equivalence ratio (lambda), voltage (V) - Bank 2, Sensor 4'
-    value = value(o2_eq_ratio_and_voltage)
+    value = prop(o2_eq_ratio_and_voltage)
 
 class x2C(PID):
     name = 'Commanded EGR (%)'
@@ -378,7 +382,7 @@ class x30(PID):
     a minimum temperature of 70 C (160 F) (60 C (140 F) for diesels)
     '''
     name = 'Number of warm-ups since diagnostic trouble codes cleared'
-    value = value(byte)
+    value = prop(byte)
 
 class x31(PID):
     name = 'Distance traveled since codes cleared (km)'
@@ -386,11 +390,11 @@ class x31(PID):
 
 class x32(PID):
     name = 'Evap system vapor pressure (Pa)'
-    value = value(lambda A,B: (struct.unpack('@h', struct.pack('@BB', A, B))[0]/4.))
+    value = prop(lambda A,B: (struct.unpack('@h', struct.pack('@BB', A, B))[0]/4.))
 
 class x33(PID):
     name = 'Absolute barometric pressure (kPa)'
-    value = value(byte)
+    value = prop(byte)
 
 
 def o2_eq_ratio_and_current(a, b, c, d):
@@ -430,19 +434,19 @@ class x3B(PID):
 
 class x3C(PID):
     name = 'Catalyst temperature - Bank 1, Sensor 1 (C)'
-    value = value(lambda A,B: short(A, B)/10 - 40)))
+    value = prop(lambda A,B: short(A, B)/10. - 40)
 
 class x3D(PID):
     name = 'Catalyst temperature - Bank 2, Sensor 1 (C)'
-    value = value(lambda A,B: short(A, B)/10 - 40)))
+    value = prop(lambda A,B: short(A, B)/10. - 40)
 
 class x3E(PID):
     name = 'Catalyst temperature - Bank 1, Sensor 2 (C)'
-    value = value(lambda A,B: short(A, B)/10 - 40)))
+    value = prop(lambda A,B: short(A, B)/10. - 40)
 
 class x3F(PID):
     name = 'Catalyst temperature - Bank 2, Sensor 2 (C)'
-    value = value(lambda A,B: short(A, B)/10 - 40)))
+    value = prop(lambda A,B: short(A, B)/10. - 40)
 
 
 ###############################################################################
@@ -506,7 +510,7 @@ class x41(PID):
 
 class x42(PID):
     name = 'Control module voltage (V)'
-    value = value(lambda A,B: short(A, B)/1000.)))
+    value = prop(lambda A,B: short(A, B)/1000.)
 
 class x43(PID):
     '''
@@ -537,7 +541,7 @@ class x43(PID):
     NOTE  See PID $04 for an additional definition of engine LOAD.
     '''
     name = 'Absolute load value (%)'
-    value = value(lambda A,B: short(A, B)*100/255.)))
+    value = prop(lambda A,B: short(A, B)*100/255.)
 
 
 class x44(PID):
@@ -556,7 +560,7 @@ class x44(PID):
       > 1.0 - Lean
     '''
     name = 'Commanded equivalence ratio'
-    value = value(lambda A,B: short(A, B)/32768.)))
+    value = prop(lambda A,B: short(A, B)/32768.)
 
 class x45(PID):
     name = 'Relative throttle position'
@@ -564,7 +568,7 @@ class x45(PID):
 
 class x46(PID):
     name = 'Ambient air temperature'
-    value = value(lambda A: (A-40)))
+    value = prop(lambda A: (A-40.))
 
 class x47(PID):
     name = 'Absolute throttle position B (%)'
@@ -603,7 +607,7 @@ class x4E(PID):
 
 class x4F(PID):
     name = 'Maximum value for equivalence ratio, oxygen sensor voltage, oxygen sensor current, and intake manifold absolute pressure (lambda, V, mA, kPa)'
-    value = value(lambda A,B,C,D: (A, B, C, D*10)))
+    value = prop(lambda A,B,C,D: (A, B, C, D*10))
     # TODO:
     # This changes the conversion formulas for other PIDs
     # Complicated.

@@ -7,16 +7,18 @@ ioloop = tornado.ioloop.IOLoop.instance()
 from carhack.lib import pycanusb
 
 class CanUsb(carhack.sensors.Sensor):
-  def __init__(self, config, name=None, bitrate='500', flags=None):
-  self.canusb = pycanusb.open(name, bitrate, flags, self.read_callback)
-  self.obd2 = OBD2Scanner(self.canusb.write)
+  def __init__(self, name=None, bitrate='500', flags=None):
+    self.canusb = pycanusb.open(name, bitrate, flags, self.read_callback)
+    self.obd2 = OBD2Scanner(self.canusb.write)
 
   def read_callback(self, frame):
     ts = frame.timestamp
     ioloop.add_callback(lambda:self.publish(
       'can.%03x' % frame.id, ts, frame.tojson()))
 
-    self.obd2.read(ts, frame)
+    if self.obd2:
+      ioloop.add_callback(lambda:
+        self.obd2.read(ts, frame.tojson()))
 
   def close(self):
     self.canusb = None
@@ -29,8 +31,10 @@ class CanUsb(carhack.sensors.Sensor):
 
 # ------------------------------------------
 # TODO think of a way to make this not suck!
-
+import greenlet
+import time
 from carhack.lib import obd2
+from collections import defaultdict
 
 OBD2_REQUEST = 0x7DF
 OBD2_IDS = [0x7E8, 0x7E9, 0x7EA, 0x7EB, 0x7EC, 0x7ED, 0x7EE, 0x7EF]
@@ -38,6 +42,7 @@ OBD2_IDS = [0x7E8, 0x7E9, 0x7EA, 0x7EB, 0x7EC, 0x7ED, 0x7EE, 0x7EF]
 
 class OBD2Scanner(object):
   def __init__(self, write):
+    self.running = True
     self.write = write
 
     self.read_waiters = defaultdict(set)
@@ -60,24 +65,23 @@ class OBD2Scanner(object):
     s = self.read_waiters[(mode, pid)]
     s.add(current)
 
-  def timeout_cb():
-    s.remove(current)
-    current.throw(IOError('Read timeout exceeded'))
+    def timeout_cb():
+      s.remove(current)
+      current.throw(IOError('Read timeout exceeded'))
 
-  _t = ioloop.add_timeout(time.time() + timeout, timeout_cb)
-  frame = current.parent.switch()
-  ioloop.remove_timeout(_t)
+    _t = ioloop.add_timeout(time.time() + timeout, timeout_cb)
+    frame = current.parent.switch()
+    ioloop.remove_timeout(_t)
 
-  return frame
+    return frame
 
   def query(self, mode, pid):
-    frame = Frame()
+    frame = pycanusb.Frame()
     frame.id  = OBD2_REQUEST
     frame.len   = 8
     frame.flags = 0
     frame.data  = (2, mode, pid, 0x55, 0x55, 0x55, 0x55, 0x55)
-
-  self.write(frame)
+    self.write(frame)
 
   def query_block(self, mode, pid):
     self.query(mode, pid)
@@ -104,24 +108,28 @@ class OBD2Scanner(object):
         break
 
       frame = self.query_block(0x01, i)
-      supported_pids.extend(frame.supported)
+      supported_pids.extend(frame.value)
 
-    return supported
+    return supported_pids
 
   def init(self):
-    self.supported = self.get_supported_pids()
+    try:
+      self.supported_pids = self.get_supported_pids()
+    except IOError, e:
+      print e
+
 
     start = lambda:greenlet.greenlet(self.init).switch()
     ioloop.add_timeout(time.time() + 2, start)
 
   def scan(self):
     while self.running:
-      if not self.supported:
+      if not self.supported_pids:
         # sleep 1s
         current = greenlet.getcurrent()
         ioloop.add_timeout(time.time() + 1, current.switch)
         current.parent.switch()
-      for p in self.supported:
+      for p in self.supported_pids:
         frame = self.query_block(1, p)
         print frame
 
