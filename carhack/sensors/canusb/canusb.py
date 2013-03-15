@@ -48,7 +48,7 @@ class OBD2Scanner(object):
     self.read_waiters = defaultdict(set)
     self.read_timeouts = []
 
-    self.supported_pids = []
+    self.supported_pids = dict()
 
     init = lambda:greenlet.greenlet(self.init).switch()
     ioloop.add_timeout(time.time() + 2, init)
@@ -60,9 +60,9 @@ class OBD2Scanner(object):
   def close(self):
     self.running = False
 
-  def read_block(self, mode, pid, timeout=0.5):
+  def read_block(self, obd2id, mode, pid, timeout=0.5):
     current = greenlet.getcurrent()
-    s = self.read_waiters[(mode, pid)]
+    s = self.read_waiters[(obd2id, mode, pid)]
     s.add(current)
 
     def timeout_cb():
@@ -83,9 +83,9 @@ class OBD2Scanner(object):
     frame.data  = (2, mode, pid, 0x55, 0x55, 0x55, 0x55, 0x55)
     self.write(frame)
 
-  def query_block(self, mode, pid):
+  def query_block(self, obd2id, mode, pid):
     self.query(mode, pid)
-    return self.read_block(mode | 0x40, pid)
+    return self.read_block(obd2id, mode | 0x40, pid)
 
   def read(self, ts, frame):
     if frame['id'] not in OBD2_IDS:
@@ -94,22 +94,25 @@ class OBD2Scanner(object):
     obd2frame = obd2.PID.parse_can(frame['id'], *frame['data'])
     obd2frame.timestamp = ts
 
-    waiting = self.read_waiters[(obd2frame.mode, obd2frame.pid)]
+    #print obd2frame
+    waiting = self.read_waiters[(frame['id'], obd2frame.mode, obd2frame.pid)]
     for i in waiting:
       i.switch(obd2frame)
 
   def get_supported_pids(self):
-    supported_pids = [0]
+    supported_pids = dict()
 
-    # TODO multiple ECUs could respond here.
-    # make table for each
-    for i in xrange(0, 0xFF, 0x20):
-      if not supported_pids[-1] == i:
-        break
+    for obd2id in OBD2_IDS:
+      supported_pids[obd2id] = [0]
+      for i in xrange(0, 0xFF, 0x20):
+        if not supported_pids[obd2id][-1] == i:
+          break
 
-      frame = self.query_block(0x01, i)
-      supported_pids.extend(frame.value)
+        frame = self.query_block(obd2id, 0x01, i)
+        supported_pids[obd2id].extend(frame.value)
 
+      if len(supported_pids[obd2id]) == 1:
+        supported_pids.pop(obd2id, None) # No ECU responding on this id, remove it
     return supported_pids
 
   def init(self):
@@ -129,7 +132,7 @@ class OBD2Scanner(object):
         current = greenlet.getcurrent()
         ioloop.add_timeout(time.time() + 1, current.switch)
         current.parent.switch()
-      for p in self.supported_pids:
-        frame = self.query_block(1, p)
-        # print frame
+      for obd2id, pids in self.supported_pids.iteritems():
+        for pid in pids:
+          frame = self.query_block(obd2id, 1, pid)
 

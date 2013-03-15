@@ -665,16 +665,24 @@ class x51(PID):
 
     # (0x54, 2, 'Evap system vapor pressure',     '-32,767',     '32,768',     'Pa',     'A*256+B - 32768'),
 
-    # (0x55, 2, 'Short term secondary oxygen sensor trim bank 1 and bank 3',     '-100',     '99.22',     ' %',     '(A-128)*100/128\n(B-128)*100/128'),
-
+    # (0x55, 2, '',     '-100',     '99.22',     ' %',     '(A-128)*100/128\n(B-128)*100/128'),
+class x55(PID):
+    name = 'Short term secondary oxygen sensor trim bank 1 and bank 3'
+    # TODO
+    
     # (0x56, 2, 'Long term secondary oxygen sensor trim bank 1 and bank 3',     '-100',     '99.22',     ' %',     '(A-128)*100/128\n(B-128)*100/128'),
-
+class x56(PID):
+    name = 'Long term secondary oxygen sensor trim bank 1 and bank 3'
+    # TODO
+    
     # (0x57, 2, 'Short term secondary oxygen sensor trim bank 2 and bank 4',     '-100',     '99.22',     ' %',     '(A-128)*100/128\n(B-128)*100/128'),
 
     # (0x58, 2, 'Long term secondary oxygen sensor trim bank 2 and bank 4',     '-100',     '99.22',     ' %',     '(A-128)*100/128\n(B-128)*100/128'),
 
     # (0x59, 2, 'Fuel rail pressure (absolute)',     '0',     '655,350',     'kPa',     '((A*256)+B) * 10'),
-
+class x59(PID):
+    name = 'Fuel rail pressure (absolute)'
+    value = prop(lambda A,B: ((A*256)+B) * 10)
     # (0x5A, 1, 'Relative accelerator pedal position',     '0',     '100',     ' %',     'A*100/255'),
 
     # (0x5B, 1, 'Hybrid battery pack remaining life',     '0',     '100',     ' %',     'A*100/255'),
