@@ -9,6 +9,7 @@ Related products
 
 * OpenXC http://openxcplatform.com/
 * RaceLogic
+* Carloop https://www.carloop.io
 
 
 
